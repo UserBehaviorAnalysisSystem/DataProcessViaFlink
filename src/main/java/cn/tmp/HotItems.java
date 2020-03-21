@@ -1,4 +1,4 @@
-package cn.zzt;
+package cn.tmp;
 
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -29,7 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class HotItems {
-    public static void main(String[] args)  throws Exception {
+    /*public static void MyClass(String[] args)  throws Exception {
         // create execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
@@ -210,5 +210,5 @@ public class HotItems {
             result.viewCount = viewCount;
             return result;
         }
-    }
+    }*/
 }

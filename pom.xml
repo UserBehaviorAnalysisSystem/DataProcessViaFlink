@@ -66,6 +66,11 @@ under the License.
 			<version>${flink.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
 
 		<!-- Add connector dependencies here. They must be in the default scope (compile). -->
 
@@ -144,7 +149,7 @@ under the License.
 							</filters>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>cn.zzt.StreamingJob</mainClass>
+									<mainClass>cn.tmp.StreamingJob</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>
