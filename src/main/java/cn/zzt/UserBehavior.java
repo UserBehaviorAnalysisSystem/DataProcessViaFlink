@@ -7,6 +7,8 @@ public class UserBehavior {
     public String behavior;     // 用户行为, 包括("pv", "buy", "cart", "fav")
     public long timestamp;      // 行为发生的时间戳，单位秒
 
+    public long getUserId() { return userId; }
+
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();

@@ -1,7 +1,10 @@
 package cn.zzt;
 
+import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.io.PojoCsvInputFormat;
 import org.apache.flink.api.java.typeutils.PojoTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
@@ -12,6 +15,8 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
+import org.apache.flink.streaming.api.windowing.time.Time;
+
 
 import java.io.File;
 import java.net.URL;
@@ -40,7 +45,8 @@ public class MyClass {
 
     private void createDataSource() throws Exception{
         // create data source
-        URL fileUrl = MyClass.class.getClassLoader().getResource("UserBehavior.csv");
+        //URL fileUrl = MyClass.class.getClassLoader().getResource("UserBehavior.csv");
+        URL fileUrl = MyClass.class.getClassLoader().getResource("out/out1.csv");
         Path filePath = Path.fromLocalFile(new File(fileUrl.toURI()));
 
         // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
@@ -64,6 +70,7 @@ public class MyClass {
 
         this.dataSource = timedData;
     }
+
     public DataStream<UserBehavior> filterPv() throws Exception{
         return dataSource.filter(new FilterFunction<UserBehavior>() {
             @Override
