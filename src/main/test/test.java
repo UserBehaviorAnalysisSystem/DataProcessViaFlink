@@ -1,9 +1,11 @@
 import cn.zzt.UserBehavior;
+import cn.zzt.MyClass;
 import cn.WindowFunction.ProcessCountUser;
+import cn.SinkFunction.SinkToCSV;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.junit.Before;
 import org.junit.Test;
-import cn.zzt.MyClass;
+
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -23,12 +25,13 @@ public class test {
     public void testCountUser() throws Exception {
         m.dataSource.timeWindowAll(Time.seconds(2), Time.seconds(1))
                 .process(new ProcessCountUser())
-                .print();
+                .addSink(new SinkToCSV());
+                //.print();
 
         m.env.execute("countUser");
     }
     @Test
-    public void check() throws Exception {
+    public void checkDuplicate() throws Exception {
         BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/UserBehavior.csv"));
         String line = null;
         StringBuilder ret = new StringBuilder();
