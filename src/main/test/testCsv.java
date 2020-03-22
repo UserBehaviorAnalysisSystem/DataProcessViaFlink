@@ -27,9 +27,9 @@ public class testCsv {
     }
     @Test
     public void testCopy() throws Exception {
-        c.copyFrom(10);
-        String old = c.read(10);
-        String now = c.read(10, "src/main/resources/out/out1.csv");
+        c.copyFrom(75);
+        String old = c.read(75);
+        String now = c.read(75, "src/main/resources/out/out1.csv");
         assertTrue(old.equals(now));
     }
 }
