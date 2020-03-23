@@ -19,9 +19,11 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         //String windowStart = new DateTime(context.window().getStart(), DateTimeZone.forID("+08:00")).toString("yyyy-MM-dd HH:mm:ss");
         // userId - count
         HashMap<Long, Long> map = new HashMap<>();
+        HashMap<Long, HashSet<String>> eachUserBehavior = new HashMap<Long, HashSet<String>>();
         // operator type - count
         HashMap<String, Long> operatorMap = new HashMap<>();
-        float count = 0, onlyPv = 0;
+
+        float count = 0;
         Long windowEnd = Long.MIN_VALUE;
         for(UserBehavior u: set){
             count++;
@@ -34,9 +36,15 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
 
             if(map.containsKey(id)){
                 Long old = map.get(id);
+                // update count
                 map.put(id, old + 1);
+                // new operation
+                if(!eachUserBehavior.get(id).contains(type)){
+                    eachUserBehavior.get(id).add(type);
+                }
             }else{
                 map.put(id, 1L);
+                eachUserBehavior.put(id, new HashSet<>());
             }
 
             if(operatorMap.containsKey(type)){
@@ -46,12 +54,24 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
                 operatorMap.put(type, 1L);
             }
         }
+        // 1.
         int allUser = map.size();
         System.out.printf("PV/UV: %f\n", count / allUser);
+
+        // 2.
+        float onlyPV = 0;
+        for(Map.Entry<Long, HashSet<String>> e: eachUserBehavior.entrySet()){
+            if(e.getValue().size() == 1 && e.getValue().contains("pv")){
+                onlyPV++;
+            }
+        }
+        System.out.printf("onlyPV/PV:%f\n", onlyPV / count);
+        // 4.
         for(Map.Entry<String, Long> e: operatorMap.entrySet()){
             Long cur = e.getValue();
             System.out.printf("%s/all: %d/%f = %f\n", e.getKey(), e.getValue(), count, e.getValue() / count);
         }
+
 
     }
 }
