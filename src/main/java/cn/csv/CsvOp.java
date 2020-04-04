@@ -51,6 +51,18 @@ public class CsvOp {
         writer.close();
     }
 
+    public void appendWrite(String s, String out) throws Exception{
+        File fd = new File(out);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fd, true));
+        String line[] = s.split("\n");
+        int len = line.length;
+        for(int i = 0; i <= len - 1; ++i){
+            writer.write(line[i]);
+            writer.newLine();
+        }
+        writer.close();
+    }
+
     public void copyFrom(int n) throws Exception {
         String s = read(n);
         write(s);

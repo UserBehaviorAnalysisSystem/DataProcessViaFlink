@@ -22,7 +22,7 @@ public class test {
         m.print();
     }
     @Test
-    public void testCountUser() throws Exception {
+    public void testAll() throws Exception {
         m.dataSource.timeWindowAll(Time.seconds(2), Time.seconds(1))
                 .process(new ProcessCountUser())
                 .addSink(new SinkToCSV());

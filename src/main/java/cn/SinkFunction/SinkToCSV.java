@@ -1,5 +1,6 @@
 package cn.SinkFunction;
 
+import cn.csv.CsvOp;
 import cn.zzt.UserBehavior;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.joda.time.DateTime;
@@ -45,6 +46,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
             }else{
                 map.put(id, 1L);
                 eachUserBehavior.put(id, new HashSet<>());
+                eachUserBehavior.get(id).add(type);
             }
 
             if(operatorMap.containsKey(type)){
@@ -54,11 +56,11 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
                 operatorMap.put(type, 1L);
             }
         }
-        // 1.
+        // 1. PV/UV
         int allUser = map.size();
         System.out.printf("PV/UV: %f\n", count / allUser);
 
-        // 2.
+        // 2. onlyPV/UV
         float onlyPV = 0;
         for(Map.Entry<Long, HashSet<String>> e: eachUserBehavior.entrySet()){
             if(e.getValue().size() == 1 && e.getValue().contains("pv")){
@@ -66,12 +68,30 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
             }
         }
         System.out.printf("onlyPV/PV:%f\n", onlyPV / count);
-        // 4.
+        // 3. each type / all percent
+        HashMap<String, Float> percent = new HashMap<>();
+        percent.put("pv", 0f);
+        percent.put("fav", 0f);
+        percent.put("buy", 0f);
+        percent.put("cart", 0f);
         for(Map.Entry<String, Long> e: operatorMap.entrySet()){
             Long cur = e.getValue();
             System.out.printf("%s/all: %d/%f = %f\n", e.getKey(), e.getValue(), count, e.getValue() / count);
+            percent.put(e.getKey(), e.getValue() / count);
         }
 
+        StringBuilder sb = new StringBuilder();
+        // format: windowEnd | pv/uv | onlyPV/UV | pv/all | fav/all | buy/all | cart/all
+        //sb.append("windowEnd,").append("pv/uv,").append("onlyPV/UV,").append("pv/all,").append("fav/all,").append("buy/all,").append("cart/all\n");
+        sb.append(windowEnd).append(",").append(count / allUser).append(",").append(onlyPV / count).append(",");
+        sb.append(percent.get("pv")).append(",")
+                .append(percent.get("fav")).append(",")
+                .append(percent.get("buy")).append(",")
+                .append(percent.get("cart"));
+        String record = sb.toString();
+
+        CsvOp csvOp = new CsvOp();
+        csvOp.appendWrite(record, "src/main/resources/out/res.csv");
 
     }
 }
