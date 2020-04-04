@@ -110,12 +110,15 @@ public class BP {
                     }
                     neuron.bias -= learningRate * dL_dPred * dPred_dH * dH_dB;
                 }
-
-                if(i % 10 == 0){
-                    ArrayList<Double> preds = feedForward(input);
-                    Double loss = mseLoss(preds, expects);
-                    System.out.printf("index:%d, loss: %f\n", j, loss);
-                }
+            }
+            if(i % 10 == 0){
+                ArrayList<Double> preds = new ArrayList<Double>(){{
+                    for(ArrayList<Double> input: data){
+                        add(feedForward(input).get(0));
+                    }
+                }};
+                Double loss = mseLoss(preds, expects);
+                System.out.printf("loss: %f\n", loss);
             }
         }
     }
@@ -131,27 +134,6 @@ public class BP {
     }
 
     public static void main(String[] args) throws Exception {
-        BP bp = new BP(2, 2, 1);
-        ArrayList<ArrayList<Double>> data = new ArrayList<>();
-        data.add(new ArrayList<Double>(){{add(-2.0); add(-1.0);}});
-        data.add(new ArrayList<Double>(){{add(25.0); add(6.0);}});
-        data.add(new ArrayList<Double>(){{add(17.0); add(4.0);}});
-        data.add(new ArrayList<Double>(){{add(-15.0); add(-6.0);}});
-        ArrayList<Double> expects = new ArrayList<Double>(){{
-            add(1.0);add(0.0);add(0.0);add(1.0);
-        }};
 
-        // train
-        bp.train(data, expects);
-
-        // test data
-        ArrayList<Double> emily = new ArrayList<Double>(){{
-            add(-7.0);add(-3.0);
-        }};
-        ArrayList<Double> frank = new ArrayList<Double>(){{
-            add(20.0);add(2.0);
-        }};
-        ArrayList<Double> a = bp.feedForward(emily);
-        ArrayList<Double> b = bp.feedForward(frank);
     }
 }
