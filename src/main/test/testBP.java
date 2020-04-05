@@ -11,6 +11,22 @@ import cn.Bp.BP;
 import cn.Bp.Neuron;
 
 public class testBP {
+    private ArrayList<ArrayList<Double>> data = new ArrayList<>();
+    private ArrayList<Double> expects = new ArrayList<>();
+    @Before
+    public void init() throws Exception{
+        data.clear();
+        data.add(new ArrayList<Double>(){{add(-2.0); add(-1.0);}});
+        data.add(new ArrayList<Double>(){{add(25.0); add(6.0);}});
+        data.add(new ArrayList<Double>(){{add(17.0); add(4.0);}});
+        data.add(new ArrayList<Double>(){{add(-15.0); add(-6.0);}});
+
+        expects.clear();
+        expects.add(1.0);
+        expects.add(0.0);
+        expects.add(0.0);
+        expects.add(1.0);
+    }
     @Test
     public void testNeuron() throws Exception {
         ArrayList<Double> input = createList(2.0, 3.0);
@@ -34,14 +50,6 @@ public class testBP {
     @Test
     public void testtrain() throws Exception{
         BP bp = new BP(2, 2, 1);
-        ArrayList<ArrayList<Double>> data = new ArrayList<>();
-        data.add(new ArrayList<Double>(){{add(-2.0); add(-1.0);}});
-        data.add(new ArrayList<Double>(){{add(25.0); add(6.0);}});
-        data.add(new ArrayList<Double>(){{add(17.0); add(4.0);}});
-        data.add(new ArrayList<Double>(){{add(-15.0); add(-6.0);}});
-        ArrayList<Double> expects = new ArrayList<Double>(){{
-            add(1.0);add(0.0);add(0.0);add(1.0);
-        }};
 
         // train
         bp.train(data, expects);
@@ -59,5 +67,10 @@ public class testBP {
         ArrayList<Double> b = bp.feedForward(frank);
         assertTrue(a.get(0).equals(0.9677625120477293));
         assertTrue(b.get(0).equals(0.03871224764189301));
+    }
+    @Test
+    public void testTrain() throws Exception{
+        BP bp = new BP(3, 2, 1);
+
     }
 }
