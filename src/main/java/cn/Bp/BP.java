@@ -23,15 +23,30 @@ public class BP {
     public BP(int i, int h, int o){
         INUM = i; HNUM = h; ONUM = o;
         learningRate = 0.1;
-        // for 2 inputs
-        ArrayList<Double> weight = Neuron.createList(0.0, 1.0);
-        Double bias = 0.0;
 
-        hide.add(new Neuron(weight, bias));
-        hide.add(new Neuron(weight, bias));
+        // build hiddden and output weight
+        ArrayList<Double> hiddenWeight = new ArrayList<>();
+        ArrayList<Double> outputWeight = new ArrayList<>();
+        Double base = 0.0, bias = 0.0;
+        for(int k = 0; k < INUM; k++){
+            hiddenWeight.add(base);
+            base += 1.0;
+        }
+        base = 0.0;
+        for(int k = 0; k < HNUM; ++k){
+            outputWeight.add(base);
+            base += 1.0;
+        }
 
-        output.add(new Neuron(weight, bias));
+        // build Neuron
+        for(int k = 0; k < HNUM; ++k){
+            hide.add(new Neuron(hiddenWeight, bias));
+        }
+        for(int k = 0; k < ONUM; ++k){
+            output.add(new Neuron(outputWeight, bias));
+        }
     }
+
     public ArrayList<Double> feedForward(String s, ArrayList<Double> input){
         int num = 0;
         ArrayList<Neuron> cur = null;
