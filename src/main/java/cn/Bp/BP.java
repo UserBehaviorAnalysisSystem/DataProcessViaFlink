@@ -94,21 +94,21 @@ public class BP {
 
                 // update hidden level
                 for(int k = 0; k < HNUM; ++k){
-                    Neuron neuron = hide.get(k);
+                    Neuron cur = hide.get(k);
 
-                    Double sumh = neuron.calSum(input);
-                    Double dH_dB = Neuron.derivSigmoid(sumh);
+                    Double sum = cur.calSum(input);
+                    Double dH_dB = Neuron.derivSigmoid(sum);
 
                     Double dPred_dH = dPred_dHs.get(k);
-
+                    // update hidden weight
                     for(int wIdx = 0; wIdx < INUM; ++wIdx){
                         Double in = input.get(wIdx);
-                        Double dL_dW = in * Neuron.derivSigmoid(sumh);
-                        Double oldW = neuron.weight.get(wIdx);
+                        Double dL_dW = in * Neuron.derivSigmoid(sum);
+                        Double oldW = cur.weight.get(wIdx);
                         oldW -= learningRate * dL_dPred * dPred_dH * dL_dW;
-                        neuron.weight.set(wIdx, oldW);
+                        cur.weight.set(wIdx, oldW);
                     }
-                    neuron.bias -= learningRate * dL_dPred * dPred_dH * dH_dB;
+                    cur.bias -= learningRate * dL_dPred * dPred_dH * dH_dB;
                 }
             }
             if(i % 10 == 0){
