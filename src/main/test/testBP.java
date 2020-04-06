@@ -74,8 +74,8 @@ public class testBP {
         ArrayList<Double> a = bp.feedForward(emily);
         ArrayList<Double> b = bp.feedForward(frank);
 
-        assertTrue(a.get(0).equals(0.9677625120477293));
-        assertTrue(b.get(0).equals(0.03871224764189301));
+        assertTrue(a.get(0).equals(0.989973300630168));
+        assertTrue(b.get(0).equals(0.011499476791906249));
     }
     /*
      * input: 3; hidden: 2; output: 1
@@ -96,7 +96,28 @@ public class testBP {
         ArrayList<Double> a = bp.feedForward(emily);
         ArrayList<Double> b = bp.feedForward(frank);
 
-        assertTrue(a.get(0).equals(0.967527105714063));
-        assertTrue(b.get(0).equals(0.03886299214710256));
+        assertTrue(a.get(0).equals(0.9898177741109315));
+        assertTrue(b.get(0).equals(0.011494594860417387));
+    }
+    /*
+     * input: 3; hidden: 6; output: 1
+     */
+    @Test
+    public void testTrain3() throws Exception{
+        BP bp = new BP(3, 6, 1);
+        // train
+        bp.train(data2, expects);
+        ArrayList<Double> emily = new ArrayList<Double>(){{
+            add(-7.0);add(-3.0);add(2.0);
+        }};
+        ArrayList<Double> frank = new ArrayList<Double>(){{
+            add(20.0);add(2.0);add(2.0);
+        }};
+        // use my result
+        ArrayList<Double> a = bp.feedForward(emily);
+        ArrayList<Double> b = bp.feedForward(frank);
+
+        assertTrue(a.get(0).equals(0.9999105781508126));
+        assertTrue(b.get(0).equals(0.007061252715411582));
     }
 }
