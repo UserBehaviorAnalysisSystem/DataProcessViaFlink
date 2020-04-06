@@ -77,7 +77,7 @@ public class BP {
     public void train(ArrayList<ArrayList<Double>> data, ArrayList<Double> expects){
         assert data.size() == expects.size();
         // number of times to loop through the entire dataset
-        int epochs = 1000, len = data.size();
+        int epochs = 10000, len = data.size();
         for(int i = 0; i < epochs; ++i){
             for(int j = 0; j < len; ++j){
                 ArrayList<Double> input = data.get(j);
@@ -126,7 +126,7 @@ public class BP {
                     cur.bias -= learningRate * dL_dPred * dPred_dH * dH_dB;
                 }
             }
-            if(i % 10 == 0){
+            if(i % 100 == 0){
                 ArrayList<Double> preds = new ArrayList<Double>(){{
                     for(ArrayList<Double> input: data){
                         add(feedForward(input).get(0));
