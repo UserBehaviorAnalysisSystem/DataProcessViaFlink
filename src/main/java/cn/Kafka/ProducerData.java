@@ -24,7 +24,6 @@ public class ProducerData {
         this.properties = prop;
     }
 
-
     public void sendMessage(String message){
         // create a new producer
         producer = new KafkaProducer<String, String>(this.properties);
