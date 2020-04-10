@@ -1,16 +1,17 @@
 package cn.Kafka;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.util.Properties;
 
-public class Producer {
+public class ProducerData {
     private Properties properties;
-    private org.apache.kafka.clients.producer.Producer producer = null;
+    private Producer<String, String> producer = null;
     private static final String topic = "test";
 
-    public Producer() throws Exception{
+    public ProducerData() throws Exception{
         Properties prop = new Properties();
         prop.put("bootstrap.servers", "localhost:9092");
         prop.put("acks", "all");
@@ -35,7 +36,9 @@ public class Producer {
     }
 
     public static void main(String[] args) throws Exception{
-        Producer driver = new Producer();
-        driver.sendMessage("zztttt");
+        ProducerData driver = new ProducerData();
+        driver.sendMessage("zztttt1");
+        driver.sendMessage("zztttt2");
+        driver.sendMessage("zztttt3");
     }
 }
