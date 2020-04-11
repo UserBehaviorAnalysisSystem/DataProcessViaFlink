@@ -12,7 +12,6 @@ import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.TimeCharacteristic;
-import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
@@ -29,31 +28,32 @@ import java.util.Comparator;
 import java.util.List;
 
 public class HotItems {
-    /*public static void MyClass(String[] args)  throws Exception {
-        // create execution environment
+
+    public static void main(String[] args) throws Exception {
+
+        // 创建 execution environment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // 告诉系统按照 EventTime 处理
+        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        // 为了打印到控制台的结果不乱序，我们配置全局的并发为1，改变并发对结果正确性没有影响
         env.setParallelism(1);
 
-        // set checkpoint config
-        CheckpointConfig config = env.getCheckpointConfig();
-        config.enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-        env.enableCheckpointing(12000);// ms
-        //env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
-
-        // set EventTime
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-
-        // create data source
+        // UserBehavior.csv 的本地文件路径, 在 resources 目录下
         URL fileUrl = HotItems.class.getClassLoader().getResource("UserBehavior.csv");
-        Path filePath = Path.fromLocalFile(new File(fileUrl.toURI()));
+        File f = new File(fileUrl.toURI());
+        Path file= Path.fromLocalFile(f);
         // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
         PojoTypeInfo<UserBehavior> pojoType = (PojoTypeInfo<UserBehavior>) TypeExtractor.createTypeInfo(UserBehavior.class);
         // 由于 Java 反射抽取出的字段顺序是不确定的，需要显式指定下文件中字段的顺序
         String[] fieldOrder = new String[]{"userId", "itemId", "categoryId", "behavior", "timestamp"};
         // 创建 PojoCsvInputFormat
-        PojoCsvInputFormat<UserBehavior> csvInput = new PojoCsvInputFormat<>(filePath, pojoType, fieldOrder);
+        PojoCsvInputFormat<UserBehavior> csv = new PojoCsvInputFormat<>(file, pojoType, fieldOrder);
 
-        env.createInput(csvInput, pojoType)
+
+        env
+                // 创建数据源，得到 UserBehavior 类型的 DataStream
+                .createInput(csv, pojoType)
+                // 抽取出时间和生成 watermark
                 .assignTimestampsAndWatermarks(new AscendingTimestampExtractor<UserBehavior>() {
                     @Override
                     public long extractAscendingTimestamp(UserBehavior userBehavior) {
@@ -61,6 +61,7 @@ public class HotItems {
                         return userBehavior.timestamp * 1000;
                     }
                 })
+                // 过滤出只有点击的数据
                 .filter(new FilterFunction<UserBehavior>() {
                     @Override
                     public boolean filter(UserBehavior userBehavior) throws Exception {
@@ -76,9 +77,9 @@ public class HotItems {
                 .print();
 
         env.execute("Hot Items Job");
-
     }
 
+    /** 求某个窗口中前 N 名的热门点击商品，key 为窗口时间戳，输出为 TopN 的结果字符串 */
     public static class TopNHotItems extends KeyedProcessFunction<Tuple, ItemViewCount, String> {
 
         private final int topSize;
@@ -149,7 +150,7 @@ public class HotItems {
         }
     }
 
-    // print the result
+    /** 用于输出窗口的结果 */
     public static class WindowResultFunction implements WindowFunction<Long, ItemViewCount, Tuple, TimeWindow> {
 
         @Override
@@ -165,7 +166,7 @@ public class HotItems {
         }
     }
 
-    // count aggregation
+    /** COUNT 统计的聚合函数实现，每出现一条记录加一 */
     public static class CountAgg implements AggregateFunction<UserBehavior, Long, Long> {
 
         @Override
@@ -189,15 +190,7 @@ public class HotItems {
         }
     }
 
-    //entity
-    public static class UserBehavior {
-        public long userId;         // 用户ID
-        public long itemId;         // 商品ID
-        public int categoryId;      // 商品类目ID
-        public String behavior;     // 用户行为, 包括("pv", "buy", "cart", "fav")
-        public long timestamp;      // 行为发生的时间戳，单位秒
-    }
-
+    /** 商品点击量(窗口操作的输出类型) */
     public static class ItemViewCount {
         public long itemId;     // 商品ID
         public long windowEnd;  // 窗口结束时间戳
@@ -210,5 +203,14 @@ public class HotItems {
             result.viewCount = viewCount;
             return result;
         }
-    }*/
+    }
+
+    /** 用户行为数据结构 **/
+    public static class UserBehavior {
+        public long userId;         // 用户ID
+        public long itemId;         // 商品ID
+        public int categoryId;      // 商品类目ID
+        public String behavior;     // 用户行为, 包括("pv", "buy", "cart", "fav")
+        public long timestamp;      // 行为发生的时间戳，单位秒
+    }
 }
