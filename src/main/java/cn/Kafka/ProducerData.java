@@ -34,6 +34,10 @@ public class ProducerData {
         producer.close();
     }
 
+    public void sendMessageForTest(String data) throws Exception{
+        sendMessage(data);
+    }
+
     public static void main(String[] args) throws Exception{
         ProducerData driver = new ProducerData();
         driver.sendMessage("zztttt1");

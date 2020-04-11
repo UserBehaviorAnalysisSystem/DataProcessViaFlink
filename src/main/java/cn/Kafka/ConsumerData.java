@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.Consumer;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Properties;
 
 public class ConsumerData {
@@ -34,6 +35,20 @@ public class ConsumerData {
             for (ConsumerRecord<String, String> record : records) {
                 System.out.printf("offset = %d, value = %s", record.offset(), record.value());
                 System.out.println();
+            }
+        }
+    }
+
+    // return the first string value
+    public String pullDataForTest() throws Exception{
+        consumer = new KafkaConsumer<>(properties);
+        consumer.subscribe(Arrays.asList("test"));
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(100);
+            if(records.count() > 0){
+                Iterator<ConsumerRecord<String, String>> it = records.iterator();
+                ConsumerRecord<String, String> record = it.next();
+                return record.value();
             }
         }
     }
