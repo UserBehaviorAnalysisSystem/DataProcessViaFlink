@@ -1,3 +1,4 @@
+import cn.csv.CsvOp;
 import cn.zzt.UserBehavior;
 import cn.zzt.MyClass;
 import cn.WindowFunction.ProcessCountUser;
@@ -13,13 +14,17 @@ import java.util.HashMap;
 
 public class test {
     private MyClass m = null;
+    private CsvOp c = null;
     @Before
     public void setUp() throws Exception {
         m = new MyClass();
+        c = new CsvOp();
+        // generate 10000 dataset in out/out1.csv
+        c.copyFrom(10000);
     }
     @Test
     public void testPrint() throws Exception{
-        m.print();
+        m.printAll();
     }
     @Test
     public void testAll() throws Exception {

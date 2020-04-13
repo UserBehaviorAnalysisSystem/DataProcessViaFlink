@@ -1,6 +1,9 @@
 import cn.csv.CsvOp;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+
 import static org.junit.Assert.*;
 
 public class testCsv {
@@ -24,6 +27,8 @@ public class testCsv {
         c.write(s);
         String now = c.read(3, "src/main/resources/out/out1.csv");
         assertTrue(now.equals(s));
+        File f = new File("src/main/resources/out/out1.csv");
+        f.delete();
     }
     @Test
     public void testCopy() throws Exception {
@@ -32,5 +37,7 @@ public class testCsv {
         String old = c.read(75);
         String now = c.read(75, "src/main/resources/out/out1.csv");
         assertTrue(old.equals(now));
+        File f = new File("src/main/resources/out/out1.csv");
+        f.delete();
     }
 }
