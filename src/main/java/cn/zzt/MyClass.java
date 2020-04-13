@@ -81,12 +81,11 @@ public class MyClass {
         });
     }
 
-    public void print() throws Exception {
+    public void printAll() throws Exception {
         dataSource.keyBy("userId")
                 .map((MapFunction<UserBehavior, String>) ele -> ele.toString())
                 .print();
         env.execute("print");
     }
-
 
 }
