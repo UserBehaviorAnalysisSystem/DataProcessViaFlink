@@ -28,7 +28,7 @@ public class test {
     }
     @Test
     public void testAll() throws Exception {
-        m.dataSource.timeWindowAll(Time.seconds(2), Time.seconds(1))
+        m.createCsvDataSource().timeWindowAll(Time.seconds(2), Time.seconds(1))
                 .process(new ProcessCountUser())
                 .addSink(new SinkToCSV());
                 //.print();

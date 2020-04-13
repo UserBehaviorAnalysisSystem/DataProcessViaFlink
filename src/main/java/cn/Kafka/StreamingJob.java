@@ -20,6 +20,8 @@ import org.apache.flink.util.Collector;
 import javax.annotation.Nullable;
 import java.util.Properties;
 
+import cn.WatermarkFunction.assignTimestampsAndWatermarks;
+
 /**
  * Skeleton for a Flink Streaming Job.
  *
@@ -52,21 +54,7 @@ public class StreamingJob {
         //consumer.setStartFromLatest();
 
         //增加时间水位设置类
-        consumer.assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks<String>(){
-            @Override
-            public long extractTimestamp(String element, long previousElementTimestamp) {
-                return JsonHelper.getTimeLongFromRawMessage(element);
-            }
-
-            @Nullable
-            @Override
-            public Watermark checkAndGetNextWatermark(String lastElement, long extractedTimestamp) {
-                if (lastElement != null) {
-                    return new Watermark(JsonHelper.getTimeLongFromRawMessage(lastElement));
-                }
-                return null;
-            }
-        });
+        consumer.assignTimestampsAndWatermarks(new assignTimestampsAndWatermarks());
 
         env.addSource(consumer)
                 //将原始消息转成Tuple2对象，保留用户名称和访问次数(每个消息访问次数为1)
