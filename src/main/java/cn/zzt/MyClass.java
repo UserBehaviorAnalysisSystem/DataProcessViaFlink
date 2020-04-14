@@ -3,6 +3,7 @@ package cn.zzt;
 import cn.Kafka.JsonHelper;
 import cn.Kafka.SingleMessage;
 import cn.WatermarkFunction.assignTimestampsAndWatermarks;
+import cn.WindowFunction.ProcessCountUser;
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -73,7 +74,7 @@ public class MyClass {
             @Override
             public long extractAscendingTimestamp(UserBehavior userBehavior) {
                 // 原始数据单位秒，将其转成毫秒
-                return userBehavior.timestamp * 1000;
+                return userBehavior.getTimestamp() * 1000;
             }
         });
 
@@ -103,7 +104,7 @@ public class MyClass {
             @Override
             public boolean filter(UserBehavior userBehavior) throws Exception {
                 // 过滤出只有点击的数据
-                return userBehavior.behavior.equals("pv");
+                return userBehavior.getBehavior().equals("pv");
             }
         });
     }
@@ -119,7 +120,9 @@ public class MyClass {
         MyClass m = new MyClass();
         DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
         dataStreamSource
-                .map((MapFunction<String, SingleMessage>) s -> JsonHelper.parse(s))
+                .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                .timeWindowAll(Time.seconds(5), Time.seconds(5))
+                .process(new ProcessCountUser())
                 .print();
         m.env.execute("flink kafka consumer");
     }

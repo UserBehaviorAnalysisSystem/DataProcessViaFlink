@@ -1,13 +1,27 @@
 package cn.zzt;
 
+import com.alibaba.fastjson.JSONObject;
+
+import static java.lang.System.exit;
+
 public class UserBehavior {
-    public long userId;         // 用户ID
-    public long itemId;         // 商品ID
-    public int categoryId;      // 商品类目ID
-    public String behavior;     // 用户行为, 包括("pv", "buy", "cart", "fav")
-    public long timestamp;      // 行为发生的时间戳，单位秒
+    private long userId;         // 用户ID
+    private long itemId;         // 商品ID
+    private int categoryId;      // 商品类目ID
+    private String behavior;     // 用户行为, 包括("pv", "buy", "cart", "fav")
+    private long timestamp;      // 行为发生的时间戳，单位秒
 
     public long getUserId() { return userId; }
+    public long getItemId() { return itemId; }
+    public int getCategoryId() { return categoryId; }
+    public String getBehavior() { return behavior; }
+    public long getTimestamp() { return timestamp; }
+
+    public void setUserId(long userId) { this.userId = userId; }
+    public void setItemId(long itemId) { this.itemId = itemId; }
+    public void setCategoryId(int categoryId) { this.categoryId = categoryId; }
+    public void setBehavior(String behavior) { this.behavior = behavior; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
     @Override
     public String toString() {
@@ -18,5 +32,27 @@ public class UserBehavior {
                 .append(", behavior:").append(behavior)
                 .append(", timestamp:").append(timestamp);
         return ret.toString();
+    }
+
+    public static UserBehavior parse(String raw){
+        try{
+            UserBehavior ret = JSONObject.parseObject(raw, UserBehavior.class);
+            return ret;
+        }catch (Exception e){
+            e.printStackTrace();
+            exit(-1);
+            return null;
+        }
+    }
+
+    public static long  parseTimeStamp(String raw){
+        try{
+            UserBehavior userBehavior = parse(raw);
+            return userBehavior.getTimestamp();
+        }catch (Exception e){
+            e.printStackTrace();
+            exit(-1);
+            return -1;
+        }
     }
 }

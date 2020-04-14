@@ -29,8 +29,8 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         for(UserBehavior u: set){
             count++;
             Long id = u.getUserId();
-            String type = u.behavior;
-            Long time = u.timestamp;
+            String type = u.getBehavior();
+            Long time = u.getTimestamp();
 
             if(time > windowEnd)
                 windowEnd = time;
@@ -83,15 +83,15 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         StringBuilder sb = new StringBuilder();
         // format: windowEnd | pv/uv | onlyPV/UV | pv/all | fav/all | buy/all | cart/all
         //sb.append("windowEnd,").append("pv/uv,").append("onlyPV/UV,").append("pv/all,").append("fav/all,").append("buy/all,").append("cart/all\n");
-        sb.append(windowEnd).append(",").append(count / allUser).append(",").append(onlyPV / count).append(",");
+        sb.append(windowEnd).append(",").append(onlyPV / count).append(",");
         sb.append(percent.get("pv")).append(",")
                 .append(percent.get("fav")).append(",")
                 .append(percent.get("buy")).append(",")
                 .append(percent.get("cart"));
         String record = sb.toString();
-
+        String pvuv = String.valueOf(count / allUser);
         CsvOp csvOp = new CsvOp();
-        csvOp.appendWrite(record, "src/main/resources/out/res.csv");
-
+        csvOp.appendWrite(record, "src/main/resources/out/data.csv");
+        csvOp.appendWrite(pvuv, "src/main/resources/out/expect.csv");
     }
 }
