@@ -227,7 +227,8 @@ public class CreatLineChart {
 
     public static void main(String[] args) throws Exception{
         // train and export data
-        PredictHousePriceAll driver = new PredictHousePriceAll();
+        //PredictAll driver = new PredictAll();
+        Predict driver = new Predict();
         driver.init();
         driver.train();
         driver.show();
@@ -251,12 +252,12 @@ public class CreatLineChart {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1024, 420);
         frame.setLocationRelativeTo(null);
-        ChartPanel  chartPanel = builder.createChart("statistic.png", "xtitle", "ytitle", categorie, datas);
+        ChartPanel chartPanel = builder.createChart("statistic.png", "xtitle", "ytitle", categorie, datas);
         frame.getContentPane().add(chartPanel);
         frame.setVisible(true);
 
         // save picture
-        saveAsFile(chartPanel,"D:\\pic\\statistic.png",900,500);
+        saveAsFile(chartPanel,"D:\\学习\\毕设\\Project\\src\\main\\resources\\out\\result.png",900,500);
 
         // run swing
         /*SwingUtilities.invokeLater(new Runnable() {

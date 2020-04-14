@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * date; price; numOfBedRoom; numOfbathroom; areaOfHouse; areaOfParking; numOfFloors; grade; area; areaOfUnderroom; yearOfBuilding; yearOfRepair; 纬度； 经度
  * 第二列就是想要predict的东西！！！
  */
-public class PredictHousePriceDemo implements PredictHousePriceBase{
+public class PredictDemo implements PredictBase {
     public static int numOfTrain = 30;
 
     public Double k = 0.0;
@@ -17,11 +17,12 @@ public class PredictHousePriceDemo implements PredictHousePriceBase{
     public ArrayList<Double> expects = null;
     public ArrayList<ArrayList<Double>> datas = null;
     public ArrayList<Double> result = new ArrayList<>();
+
     public BP bp = null;
 
     public void init() throws Exception{
         datas = readData();
-        expects = readExpect();
+        expects = readExpect("src/main/resources/data/kc_train2.csv");
         bp = new BP(2, 4, 1);
     }
 
@@ -55,8 +56,8 @@ public class PredictHousePriceDemo implements PredictHousePriceBase{
         return ret;
     }
     /*-----------------------------------------------------------------------------*/
-    public ArrayList<Double> readExpect() throws Exception{
-        String filename = "src/main/resources/data/kc_train2.csv";
+    public ArrayList<Double> readExpect(String s) throws Exception{
+        String filename = s;
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         String line = null;
         int n = 0;
@@ -102,7 +103,7 @@ public class PredictHousePriceDemo implements PredictHousePriceBase{
 
 
     public static void main(String[] args) throws Exception{
-        PredictHousePriceDemo driver = new PredictHousePriceDemo();
+        PredictDemo driver = new PredictDemo();
 
         driver.init();
         driver.train();

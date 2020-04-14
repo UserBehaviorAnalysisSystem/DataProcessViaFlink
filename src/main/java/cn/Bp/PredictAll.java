@@ -4,13 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 
-import cn.Bp.Item;
-
-public class PredictHousePriceAll extends PredictHousePriceDemo{
+public class PredictAll extends PredictDemo {
     @Override
     public void init() throws Exception{
         datas = readData();
-        expects = readExpect();
+        expects = readExpect("src/main/resources/data/kc_train2.csv");
         bp = new BP(datas.get(0).size(), 4, 1);
     }
 
@@ -31,7 +29,7 @@ public class PredictHousePriceAll extends PredictHousePriceDemo{
     }
 
     public static void main(String[] args) throws Exception{
-        PredictHousePriceAll driver = new PredictHousePriceAll();
+        PredictAll driver = new PredictAll();
 
         driver.init();
         driver.train();
