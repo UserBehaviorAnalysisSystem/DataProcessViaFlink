@@ -67,4 +67,9 @@ public class CsvOp {
         String s = read(n);
         write(s);
     }
+
+    public static void main(String[] args) throws Exception{
+        CsvOp c = new CsvOp();
+        c.copyFrom(480000);
+    }
 }
