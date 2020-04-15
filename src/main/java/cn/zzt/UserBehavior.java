@@ -23,6 +23,17 @@ public class UserBehavior {
     public void setBehavior(String behavior) { this.behavior = behavior; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 
+    public UserBehavior() throws Exception{
+
+    }
+    public UserBehavior(long a, long b, int c, String d, long e) throws Exception{
+        this.userId = a;
+        this.itemId = b;
+        this.categoryId = c;
+        this.behavior = d;
+        this.timestamp = e;
+    }
+
     @Override
     public String toString() {
         StringBuilder ret = new StringBuilder();

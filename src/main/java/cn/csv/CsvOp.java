@@ -1,6 +1,12 @@
 package cn.csv;
 
+import cn.zzt.UserBehavior;
+
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class CsvOp {
     private final String defaultRead = "src/main/resources/UserBehavior.csv";
@@ -68,8 +74,43 @@ public class CsvOp {
         write(s);
     }
 
+    public void generateDataset(int n) throws Exception{
+        String filename = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorLarge.csv";
+        String result = "D:\\学习\\毕设\\Project\\src\\main\\resources\\final\\datas.csv";
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(result, true));
+        String line = null;
+        int index = 0;
+        ArrayList<UserBehavior> dataset = new ArrayList<>();
+        while((line = reader.readLine()) != null && index < n){
+            String[] data = line.split(",");
+            UserBehavior userBehavior = new UserBehavior(Long.valueOf(data[0]), Long.valueOf(data[1]), Integer.valueOf(data[2]), data[3], Long.valueOf(data[4]));
+            dataset.add(userBehavior);
+            index++;
+        }
+        Collections.sort(dataset, new Comparator<UserBehavior>() {
+            @Override
+            public int compare(UserBehavior o1, UserBehavior o2) {
+                // increase
+                return Long.valueOf(o1.getTimestamp()).compareTo(Long.valueOf(o2.getTimestamp()));
+            }
+        });
+        for(UserBehavior userBehavior: dataset){
+            StringBuilder sb = new StringBuilder();
+            sb.append(userBehavior.getUserId()).append(",")
+                    .append(userBehavior.getItemId()).append(",")
+                    .append(userBehavior.getCategoryId()).append(",")
+                    .append(userBehavior.getBehavior()).append(",")
+                    .append(userBehavior.getTimestamp());
+            writer.write(sb.toString());
+            writer.newLine();
+        }
+        reader.close();
+        writer.close();
+    }
+
     public static void main(String[] args) throws Exception{
         CsvOp c = new CsvOp();
-        c.copyFrom(480000);
+        c.generateDataset(1000000);
     }
 }
