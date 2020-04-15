@@ -34,7 +34,7 @@ public class UserBehavior {
         this.timestamp = e;
     }
 
-    @Override
+    /*@Override
     public String toString() {
         StringBuilder ret = new StringBuilder();
         ret.append("userId:").append(userId)
@@ -43,12 +43,15 @@ public class UserBehavior {
                 .append(", behavior:").append(behavior)
                 .append(", timestamp:").append(timestamp);
         return ret.toString();
-    }
+    }*/
 
     public static UserBehavior parse(String raw){
         try{
-            UserBehavior ret = JSONObject.parseObject(raw, UserBehavior.class);
-            return ret;
+            UserBehavior userBehavior = null;
+            if(raw != null){
+                userBehavior = JSONObject.parseObject(raw, UserBehavior.class);
+            }
+            return userBehavior;
         }catch (Exception e){
             e.printStackTrace();
             exit(-1);
@@ -59,7 +62,10 @@ public class UserBehavior {
     public static long  parseTimeStamp(String raw){
         try{
             UserBehavior userBehavior = parse(raw);
-            return userBehavior.getTimestamp();
+            if(userBehavior == null)
+                return 0L;
+            else
+                return userBehavior.getTimestamp();
         }catch (Exception e){
             e.printStackTrace();
             exit(-1);

@@ -8,19 +8,15 @@ import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.AssignerWithPunctuatedWatermarks;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
-import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.streaming.api.windowing.windows.Window;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 
-import javax.annotation.Nullable;
 import java.util.Properties;
 
-import cn.WatermarkFunction.assignTimestampsAndWatermarks;
+import cn.WatermarkFunction.assignSingleMessageTimestampsAndWatermarks;
 
 /**
  * Skeleton for a Flink Streaming Job.
@@ -48,13 +44,13 @@ public class StreamingJob {
         props.setProperty("group.id", "flink-group");
 
         //数据源配置，是一个kafka消息的消费者
-        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink4", new SimpleStringSchema(), props);
+        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink8", new SimpleStringSchema(), props);
         //consumer.setStartFromGroupOffsets();
-        consumer.setStartFromEarliest();
-        //consumer.setStartFromLatest();
+        //consumer.setStartFromEarliest();
+        consumer.setStartFromLatest();
 
         //增加时间水位设置类
-        consumer.assignTimestampsAndWatermarks(new assignTimestampsAndWatermarks());
+        consumer.assignTimestampsAndWatermarks(new assignSingleMessageTimestampsAndWatermarks());
 
         env.addSource(consumer)
                 //将原始消息转成Tuple2对象，保留用户名称和访问次数(每个消息访问次数为1)

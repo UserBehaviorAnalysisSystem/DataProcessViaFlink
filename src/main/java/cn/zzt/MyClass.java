@@ -2,16 +2,21 @@ package cn.zzt;
 
 import cn.Kafka.JsonHelper;
 import cn.Kafka.SingleMessage;
-import cn.SinkFunction.SinkToCSV;
-import cn.WatermarkFunction.assignTimestampsAndWatermarks;
+import cn.Kafka.StreamingJob;
+import cn.WatermarkFunction.assignSingleMessageTimestampsAndWatermarks;
+import cn.WatermarkFunction.assignUserBehaviorTimestampAndWatermarks;
+import cn.WindowFunction.MyclassProcessWindowFunction;
 import cn.WindowFunction.ProcessCountUser;
-import org.apache.flink.api.common.functions.AggregateFunction;
+import cn.tmp.HotItems;
 import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.io.PojoCsvInputFormat;
+import org.apache.flink.api.java.tuple.Tuple;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.PojoTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.core.fs.Path;
@@ -20,16 +25,18 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.AssignerWithPunctuatedWatermarks;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
-import org.apache.flink.streaming.api.watermark.Watermark;
+import org.apache.flink.streaming.api.functions.windowing.ProcessAllWindowFunction;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.util.Collector;
 
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Properties;
 
 public class MyClass {
@@ -87,10 +94,11 @@ public class MyClass {
         props.setProperty("bootstrap.servers", "localhost:9092");
         props.setProperty("group.id", "flink-group");
 
-        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink5", new SimpleStringSchema(), props);
+        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink9", new SimpleStringSchema(), props);
         consumer.setStartFromLatest();
         // add watermark
-        consumer.assignTimestampsAndWatermarks(new assignTimestampsAndWatermarks());
+        //consumer.assignTimestampsAndWatermarks(new assignSingleMessageTimestampsAndWatermarks());
+        consumer.assignTimestampsAndWatermarks(new assignUserBehaviorTimestampAndWatermarks());
 
         DataStreamSource<String> dataStreamSource = this.env.addSource(consumer);
         /*dataStreamSource
@@ -116,22 +124,55 @@ public class MyClass {
                 .print();
         env.execute("print");
     }
+    /* WindowFunction<IN, OUT, KEY, W extends Window> */
+    public static class windowFunction implements WindowFunction<Tuple2<String, Long>, Tuple2<String, Long>, Tuple, TimeWindow>{
+        @Override
+        public void apply(Tuple tuple,
+                          TimeWindow window,
+                          Iterable<Tuple2<String, Long>> input,
+                          Collector<Tuple2<String, Long>> out) throws Exception{
+            long sum = 0L;
+            // just one element
+            Tuple2<String, Long> ret = input.iterator().next();
 
+            for(Tuple2<String, Long> cur: input){
+                sum += cur.f1;
+            }
+            ret.f1 = sum;
+            out.collect(ret);
+        }
+    }
     public static void main(String[] args) throws Exception{
         MyClass m = new MyClass();
-        /*DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
+        DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
         dataStreamSource
+                /*.flatMap((FlatMapFunction<String, Tuple2<String, Long>>) (s, collector) -> {
+                    UserBehavior userBehavior = UserBehavior.parse(s);
+                    if(userBehavior != null){
+                        collector.collect(new Tuple2<>(String.valueOf(userBehavior.getUserId()), 1L));
+                    }
+                })
+                .returns(TypeInformation.of(new TypeHint<Tuple2<String, Long>>(){}))
+                .keyBy(0)
+                .timeWindow(Time.seconds(5), Time.seconds(5))
+                .apply(new MyClass.windowFunction())
+                .print();*/
+
+                //.timeWindowAll(Time.seconds(5), Time.seconds(2))
+                //.process(new MyclassProcessWindowFunction())
+                //.print();
+                /*.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<String>() {
+                    @Override
+                    public long extractAscendingTimestamp(String s) {
+                        // 原始数据单位秒
+                        UserBehavior userBehavior = UserBehavior.parse(s);
+                        return userBehavior.getTimestamp();
+                    }
+                })*/
                 .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
-                .timeWindowAll(Time.seconds(5), Time.seconds(5))
+                .timeWindowAll(Time.seconds(5), Time.seconds(2))
                 .process(new ProcessCountUser())
                 .print();
-        m.env.execute("flink kafka consumer");*/
-
-        m.createCsvDataSource("UserBehavior.csv").timeWindowAll(Time.minutes(30), Time.minutes(15))
-                .process(new ProcessCountUser())
-                .addSink(new SinkToCSV());
-        //.print();
-
-        m.env.execute("countUser");
+        m.env.execute("flink kafka consumer");
     }
 }

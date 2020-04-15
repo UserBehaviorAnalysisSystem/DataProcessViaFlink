@@ -1,23 +1,27 @@
 package cn.WatermarkFunction;
 
 import cn.Kafka.JsonHelper;
+import cn.zzt.UserBehavior;
 import org.apache.flink.streaming.api.functions.AssignerWithPunctuatedWatermarks;
 import org.apache.flink.streaming.api.watermark.Watermark;
 
 import javax.annotation.Nullable;
 
-public class assignTimestampsAndWatermarks implements AssignerWithPunctuatedWatermarks<String> {
+public class assignUserBehaviorTimestampAndWatermarks implements AssignerWithPunctuatedWatermarks<String> {
     @Override
     public long extractTimestamp(String element, long previousElementTimestamp) {
-        return JsonHelper.getTimeLongFromRawMessage(element);
+        // must be millsecond!!!
+        return UserBehavior.parseTimeStamp(element);
     }
 
     @Nullable
     @Override
     public Watermark checkAndGetNextWatermark(String lastElement, long extractedTimestamp) {
         if (lastElement != null) {
-            return new Watermark(JsonHelper.getTimeLongFromRawMessage(lastElement));
+            // must be millsecond!!!
+            return new Watermark(UserBehavior.parseTimeStamp(lastElement));
         }
         return null;
     }
+
 }
