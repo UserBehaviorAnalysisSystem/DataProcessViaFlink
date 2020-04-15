@@ -2,6 +2,7 @@ package cn.zzt;
 
 import cn.Kafka.JsonHelper;
 import cn.Kafka.SingleMessage;
+import cn.SinkFunction.SinkToCSV;
 import cn.WatermarkFunction.assignTimestampsAndWatermarks;
 import cn.WindowFunction.ProcessCountUser;
 import org.apache.flink.api.common.functions.AggregateFunction;
@@ -53,10 +54,10 @@ public class MyClass {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
     }
 
-    public DataStream<UserBehavior> createCsvDataSource() throws Exception{
+    public DataStream<UserBehavior> createCsvDataSource(String src) throws Exception{
         // create data source
         //URL fileUrl = MyClass.class.getClassLoader().getResource("UserBehavior.csv");
-        URL fileUrl = MyClass.class.getClassLoader().getResource("out/out1.csv");
+        URL fileUrl = MyClass.class.getClassLoader().getResource("final\\rawData.csv");
         Path filePath = Path.fromLocalFile(new File(fileUrl.toURI()));
 
         // 抽取 UserBehavior 的 TypeInformation，是一个 PojoTypeInfo
@@ -100,7 +101,7 @@ public class MyClass {
     }
 
     public DataStream<UserBehavior> filterPv() throws Exception{
-        return createCsvDataSource().filter(new FilterFunction<UserBehavior>() {
+        return createCsvDataSource("UserBehavior.csv").filter(new FilterFunction<UserBehavior>() {
             @Override
             public boolean filter(UserBehavior userBehavior) throws Exception {
                 // 过滤出只有点击的数据
@@ -110,7 +111,7 @@ public class MyClass {
     }
 
     public void printAll() throws Exception {
-        createCsvDataSource().keyBy("userId")
+        createCsvDataSource("UserBehavior.csv").keyBy("userId")
                 .map((MapFunction<UserBehavior, String>) ele -> ele.toString())
                 .print();
         env.execute("print");
@@ -118,12 +119,19 @@ public class MyClass {
 
     public static void main(String[] args) throws Exception{
         MyClass m = new MyClass();
-        DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
+        /*DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
         dataStreamSource
                 .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                 .timeWindowAll(Time.seconds(5), Time.seconds(5))
                 .process(new ProcessCountUser())
                 .print();
-        m.env.execute("flink kafka consumer");
+        m.env.execute("flink kafka consumer");*/
+
+        m.createCsvDataSource("UserBehavior.csv").timeWindowAll(Time.minutes(30), Time.minutes(15))
+                .process(new ProcessCountUser())
+                .addSink(new SinkToCSV());
+        //.print();
+
+        m.env.execute("countUser");
     }
 }

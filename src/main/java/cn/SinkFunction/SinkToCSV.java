@@ -91,7 +91,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         String record = sb.toString();
         String pvuv = String.valueOf(count / allUser);
         CsvOp csvOp = new CsvOp();
-        csvOp.appendWrite(record, "src/main/resources/out/data.csv");
-        csvOp.appendWrite(pvuv, "src/main/resources/out/expect.csv");
+        csvOp.appendWrite(record, "src/main/resources/final/data.csv");
+        csvOp.appendWrite(pvuv, "src/main/resources/final/expect.csv");
     }
 }

@@ -74,18 +74,20 @@ public class CsvOp {
         write(s);
     }
 
-    public void generateDataset(int n) throws Exception{
-        String filename = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorLarge.csv";
-        String result = "D:\\学习\\毕设\\Project\\src\\main\\resources\\final\\datas.csv";
-        BufferedReader reader = new BufferedReader(new FileReader(filename));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(result, true));
+    public void generateDataset(String src, String dst, int n) throws Exception{
+        //String filename = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorLarge.csv";
+        //String result = "D:\\学习\\毕设\\Project\\src\\main\\resources\\final\\rawDatas.csv";
+        BufferedReader reader = new BufferedReader(new FileReader(src));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(dst, true));
         String line = null;
         int index = 0;
         ArrayList<UserBehavior> dataset = new ArrayList<>();
         while((line = reader.readLine()) != null && index < n){
             String[] data = line.split(",");
             UserBehavior userBehavior = new UserBehavior(Long.valueOf(data[0]), Long.valueOf(data[1]), Integer.valueOf(data[2]), data[3], Long.valueOf(data[4]));
-            dataset.add(userBehavior);
+            // start from 2017-11-26 09:00:00
+            if(userBehavior.getTimestamp() >= 1511658000)
+                dataset.add(userBehavior);
             index++;
         }
         Collections.sort(dataset, new Comparator<UserBehavior>() {
@@ -111,6 +113,6 @@ public class CsvOp {
 
     public static void main(String[] args) throws Exception{
         CsvOp c = new CsvOp();
-        c.generateDataset(1000000);
+        //c.generateDataset(1000000);
     }
 }

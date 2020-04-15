@@ -8,14 +8,14 @@ public class Predict extends PredictDemo{
     @Override
     public void init() throws Exception{
         datas = readData();
-        expects = readExpect("src/main/resources/out/expect.csv");
+        expects = readExpect("src/main/resources/final/expect.csv");
         bp = new BP(4, 4, 1);
     }
 
     /*--------------------------------------------------*/
     @Override
     public ArrayList<ArrayList<Double>> readData() throws Exception{
-        String filename = "src/main/resources/out/data.csv";
+        String filename = "src/main/resources/final/data.csv";
         BufferedReader reader = new BufferedReader(new FileReader(filename));
         String line = null;
         ArrayList<ArrayList<Double>> datas = new ArrayList<>();

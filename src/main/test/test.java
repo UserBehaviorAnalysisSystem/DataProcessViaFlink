@@ -19,8 +19,6 @@ public class test {
     public void setUp() throws Exception {
         m = new MyClass();
         c = new CsvOp();
-        // generate 10000 dataset in out/out1.csv
-        c.copyFrom(10000);
     }
     @Test
     public void testPrint() throws Exception{
@@ -28,7 +26,7 @@ public class test {
     }
     @Test
     public void testAll() throws Exception {
-        m.createCsvDataSource().timeWindowAll(Time.minutes(30), Time.minutes(15))
+        m.createCsvDataSource("UserBehavior.csv").timeWindowAll(Time.minutes(30), Time.minutes(15))
                 .process(new ProcessCountUser())
                 .addSink(new SinkToCSV());
                 //.print();
