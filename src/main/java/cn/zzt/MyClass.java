@@ -3,6 +3,7 @@ package cn.zzt;
 import cn.Kafka.JsonHelper;
 import cn.Kafka.SingleMessage;
 import cn.Kafka.StreamingJob;
+import cn.SinkFunction.SinkToCSV;
 import cn.WatermarkFunction.assignSingleMessageTimestampsAndWatermarks;
 import cn.WatermarkFunction.assignUserBehaviorTimestampAndWatermarks;
 import cn.WindowFunction.MyclassProcessWindowFunction;
@@ -54,7 +55,7 @@ public class MyClass {
         // set checkpoint config
         CheckpointConfig config = env.getCheckpointConfig();
         config.enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-        env.enableCheckpointing(12000);// ms
+        //env.enableCheckpointing(12000);// ms
         //env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);
 
         // set EventTime
@@ -94,7 +95,7 @@ public class MyClass {
         props.setProperty("bootstrap.servers", "localhost:9092");
         props.setProperty("group.id", "flink-group");
 
-        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink9", new SimpleStringSchema(), props);
+        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink10", new SimpleStringSchema(), props);
         consumer.setStartFromLatest();
         // add watermark
         //consumer.assignTimestampsAndWatermarks(new assignSingleMessageTimestampsAndWatermarks());
@@ -143,36 +144,6 @@ public class MyClass {
         }
     }
     public static void main(String[] args) throws Exception{
-        MyClass m = new MyClass();
-        DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
-        dataStreamSource
-                /*.flatMap((FlatMapFunction<String, Tuple2<String, Long>>) (s, collector) -> {
-                    UserBehavior userBehavior = UserBehavior.parse(s);
-                    if(userBehavior != null){
-                        collector.collect(new Tuple2<>(String.valueOf(userBehavior.getUserId()), 1L));
-                    }
-                })
-                .returns(TypeInformation.of(new TypeHint<Tuple2<String, Long>>(){}))
-                .keyBy(0)
-                .timeWindow(Time.seconds(5), Time.seconds(5))
-                .apply(new MyClass.windowFunction())
-                .print();*/
 
-                //.timeWindowAll(Time.seconds(5), Time.seconds(2))
-                //.process(new MyclassProcessWindowFunction())
-                //.print();
-                /*.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<String>() {
-                    @Override
-                    public long extractAscendingTimestamp(String s) {
-                        // 原始数据单位秒
-                        UserBehavior userBehavior = UserBehavior.parse(s);
-                        return userBehavior.getTimestamp();
-                    }
-                })*/
-                .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
-                .timeWindowAll(Time.seconds(5), Time.seconds(2))
-                .process(new ProcessCountUser())
-                .print();
-        m.env.execute("flink kafka consumer");
     }
 }

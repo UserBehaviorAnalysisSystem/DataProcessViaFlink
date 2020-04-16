@@ -6,6 +6,7 @@ import cn.csv.CsvOp;
 import cn.zzt.MyClass;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import cn.AggregateFunction.CountSpecificKey;
 import cn.WindowFunction.WindowResultFunction;
@@ -42,12 +43,13 @@ public class Main {
 
         // preprocess
         MyClass m = new MyClass();
-        m.createKafkaDataSource()
+        DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
+        dataStreamSource
                 .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
-                .timeWindowAll(Time.minutes(30), Time.minutes(15))
+                .timeWindowAll(Time.minutes(30), Time.seconds(15))
                 .process(new ProcessCountUser())
                 .addSink(new SinkToCSV());
-        m.env.execute("demo");
+        m.env.execute("flink kafka consumer");
 
         // show picture
         new CreatLineChart().draw();
