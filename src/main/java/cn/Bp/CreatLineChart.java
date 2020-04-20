@@ -231,7 +231,7 @@ public class CreatLineChart {
         Predict driver = new Predict();
         driver.init();
         driver.train();
-        driver.show();
+        //driver.show();
         ArrayList<ArrayList<Double>> pair = driver.export();
 
         // generate ytitle

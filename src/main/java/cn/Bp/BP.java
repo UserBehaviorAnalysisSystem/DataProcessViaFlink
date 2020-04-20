@@ -49,6 +49,13 @@ public class BP {
         }
     }
 
+    public static synchronized BP getInstance(){
+        if(bp == null){
+            assert false;
+        }
+        return bp;
+    }
+
     public static synchronized BP getInstance(int i, int h, int o){
         if(bp == null){
             bp = new BP(i, h, o);

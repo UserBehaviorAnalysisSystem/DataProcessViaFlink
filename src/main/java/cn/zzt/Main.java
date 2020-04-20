@@ -42,17 +42,36 @@ public class Main {
         c.generateDataset(src, dst, 400000);
 
         // preprocess
-        MyClass m = new MyClass();
-        DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
-        dataStreamSource
-                .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
-                .timeWindowAll(Time.minutes(30), Time.seconds(15))
-                .process(new ProcessCountUser())
-                .addSink(new SinkToCSV());
-        m.env.execute("flink kafka consumer");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MyClass m = new MyClass();
+                    DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
+                    dataStreamSource
+                            .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            .timeWindowAll(Time.minutes(30), Time.seconds(15))
+                            .process(new ProcessCountUser())
+                            .addSink(new SinkToCSV());
+                    m.env.execute("flink kafka consumer");
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
 
         // show picture
-        new CreatLineChart().draw();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    new CreatLineChart().draw();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
     public static void main(String[] args) throws Exception{
         //new Main().runDemo();
