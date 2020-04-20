@@ -20,7 +20,9 @@ public class BP {
     //Double error;
     //String funcName;
 
-    public BP(int i, int h, int o){
+    public static BP bp = null;
+
+    private BP(int i, int h, int o){
         INUM = i; HNUM = h; ONUM = o;
         learningRate = 0.1;
 
@@ -45,6 +47,13 @@ public class BP {
         for(int k = 0; k < ONUM; ++k){
             output.add(new Neuron(outputWeight, bias));
         }
+    }
+
+    public static synchronized BP getInstance(int i, int h, int o){
+        if(bp == null){
+            bp = new BP(i, h, o);
+        }
+        return bp;
     }
 
     public ArrayList<Double> feedForward(String s, ArrayList<Double> input){
