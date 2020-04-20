@@ -23,7 +23,7 @@ public class PredictDemo implements PredictBase {
     public void init() throws Exception{
         datas = readData();
         expects = readExpect("src/main/resources/data/kc_train2.csv");
-        bp = new BP(2, 4, 1);
+        bp = BP.getInstance(2, 4, 1);
     }
 
     public void train() throws Exception{

@@ -48,7 +48,7 @@ public class testBP {
     }
     @Test
     public void testFeedForward() throws Exception{
-        BP bp = new BP(2, 2, 1);
+        BP bp = BP.getInstance(2, 2, 1);
         ArrayList<Double> input = createList(2.0, 3.0);
         ArrayList<Double> out = bp.feedForward(input);
 
@@ -60,7 +60,7 @@ public class testBP {
      */
     @Test
     public void testTrain1() throws Exception{
-        BP bp = new BP(2, 2, 1);
+        BP bp = BP.getInstance(2, 2, 1);
         // train
         bp.train(data, expects);
         // test data
@@ -82,7 +82,7 @@ public class testBP {
      */
     @Test
     public void testTrain2() throws Exception{
-        BP bp = new BP(3, 2, 1);
+        BP bp = BP.getInstance(3, 2, 1);
         // train
         bp.train(data2, expects);
         // test my data
@@ -104,7 +104,7 @@ public class testBP {
      */
     @Test
     public void testTrain3() throws Exception{
-        BP bp = new BP(3, 6, 1);
+        BP bp = BP.getInstance(3, 6, 1);
         // train
         bp.train(data2, expects);
         ArrayList<Double> emily = new ArrayList<Double>(){{

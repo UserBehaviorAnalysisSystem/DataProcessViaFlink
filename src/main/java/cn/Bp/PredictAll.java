@@ -9,7 +9,7 @@ public class PredictAll extends PredictDemo {
     public void init() throws Exception{
         datas = readData();
         expects = readExpect("src/main/resources/data/kc_train2.csv");
-        bp = new BP(datas.get(0).size(), 4, 1);
+        bp = BP.getInstance(datas.get(0).size(), 4, 1);
     }
 
     @Override
