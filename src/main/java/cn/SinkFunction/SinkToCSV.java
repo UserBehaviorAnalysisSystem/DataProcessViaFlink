@@ -16,6 +16,8 @@ import java.util.Map;
 public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
     //HashMap<Long, Long> ret = new HashMap<>();
     private int dataCount = 0;
+    private ArrayList<ArrayList<Double>> datas = new ArrayList<>();
+    private ArrayList<Double> expects = new ArrayList<>();
     @Override
     public void invoke(HashSet<UserBehavior> set, Context context) throws Exception {
 
@@ -105,16 +107,22 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         data.add(percent.get("fav"));
         data.add(percent.get("buy"));
         data.add(percent.get("cart"));
+        datas.add(data);
+        expects.add(count / allUser);
+        // show diff
+        Double predictResult = bp.predict(data);
+        System.out.println("predict:" + predictResult + ", expect:" + count / allUser);
 
-        ArrayList<Double> result = bp.feedForward(data);
         dataCount++;
         System.out.println("dataCount:" + dataCount);
         if(dataCount == 30){
             // train
-            // ...
+            bp.train(datas, expects);
             // reset to 0
             System.out.println("============train==============");
             dataCount = 0;
+            datas.clear();
+            expects.clear();
         }
     }
 }

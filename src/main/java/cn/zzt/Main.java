@@ -61,7 +61,7 @@ public class Main {
         }).start();
 
         // show picture
-        new Thread(new Runnable() {
+        /*new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -70,7 +70,7 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        }).start();*/
 
     }
     public static void main(String[] args) throws Exception{

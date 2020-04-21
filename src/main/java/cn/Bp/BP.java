@@ -19,6 +19,9 @@ public class BP {
     private Double learningRate;
     //Double error;
     //String funcName;
+    /*------------predict-------------*/
+    private Double Min = 1.0;
+    private Double Max = 9.0;
 
     public static BP bp = null;
 
@@ -90,8 +93,21 @@ public class BP {
         return finalOut;
     }
 
+    public void NormalizeExpects(ArrayList<Double> expects) {
+        Double gap = Max - Min;
+        Double k = gap;
+        Double b = Min;
+        int len = expects.size();
+        for(int i = 0; i < len; ++i){
+            Double old = expects.get(i);
+            expects.set(i, (old - Min) / gap);
+        }
+    }
+
     public void train(ArrayList<ArrayList<Double>> data, ArrayList<Double> expects){
         assert data.size() == expects.size();
+        // normalized expects data
+        NormalizeExpects(expects);
         // number of times to loop through the entire dataset
         int epochs = 10000, len = data.size();
         for(int i = 0; i < epochs; ++i){
@@ -153,6 +169,12 @@ public class BP {
             }
         }
     }
+
+    public Double predict(ArrayList<Double> data) {
+        ArrayList<Double> ret = bp.feedForward(data);
+        return ret.get(0) * (Max - Min) + Min;
+    }
+
     private static Double mseLoss(ArrayList<Double> a, ArrayList<Double> b){
         assert a.size() == b.size();
         int len = a.size();
