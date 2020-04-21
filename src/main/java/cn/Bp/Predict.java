@@ -29,6 +29,7 @@ public class Predict extends PredictDemo{
             data.add(Double.valueOf(items[2])); // pv/all
             data.add(Double.valueOf(items[3]));
             data.add(Double.valueOf(items[4]));
+            data.add(Double.valueOf(items[5]));
             datas.add(data);
         }
         return datas;
