@@ -1,19 +1,21 @@
 package cn.SinkFunction;
 
+import cn.Bp.BP;
 import cn.csv.CsvOp;
 import cn.zzt.UserBehavior;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
 /* extends AbstractRichFunction */
 public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
-    int count = 0;
     //HashMap<Long, Long> ret = new HashMap<>();
+    private int dataCount = 0;
     @Override
     public void invoke(HashSet<UserBehavior> set, Context context) throws Exception {
 
@@ -24,7 +26,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         // operator type - count
         HashMap<String, Long> operatorMap = new HashMap<>();
 
-        float count = 0;
+        Double count = 0.0;
         Long windowEnd = Long.MIN_VALUE;
         for(UserBehavior u: set){
             count++;
@@ -61,7 +63,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         System.out.printf("PV/UV: %f\n", count / allUser);
 
         // 2. onlyPV/UV
-        float onlyPV = 0;
+        Double onlyPV = 0.0;
         for(Map.Entry<Long, HashSet<String>> e: eachUserBehavior.entrySet()){
             if(e.getValue().size() == 1 && e.getValue().contains("pv")){
                 onlyPV++;
@@ -69,11 +71,11 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         }
         System.out.printf("onlyPV/PV:%f\n", onlyPV / count);
         // 3. each type / all percent
-        HashMap<String, Float> percent = new HashMap<>();
-        percent.put("pv", 0f);
-        percent.put("fav", 0f);
-        percent.put("buy", 0f);
-        percent.put("cart", 0f);
+        HashMap<String, Double> percent = new HashMap<>();
+        percent.put("pv", 0.0);
+        percent.put("fav", 0.0);
+        percent.put("buy", 0.0);
+        percent.put("cart", 0.0);
         for(Map.Entry<String, Long> e: operatorMap.entrySet()){
             Long cur = e.getValue();
             System.out.printf("%s/all: %d/%f = %f\n", e.getKey(), e.getValue(), count, e.getValue() / count);
@@ -93,5 +95,26 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         CsvOp csvOp = new CsvOp();
         csvOp.appendWrite(record, "src/main/resources/final/data.csv");
         csvOp.appendWrite(pvuv, "src/main/resources/final/expect.csv");
+
+        // predict
+        BP bp = bp = BP.getInstance(5, 4, 1);
+
+        ArrayList<Double> data = new ArrayList<Double>();
+        data.add(onlyPV / count);
+        data.add(percent.get("pv"));
+        data.add(percent.get("fav"));
+        data.add(percent.get("buy"));
+        data.add(percent.get("cart"));
+
+        ArrayList<Double> result = bp.feedForward(data);
+        dataCount++;
+        System.out.println("dataCount:" + dataCount);
+        if(dataCount == 30){
+            // train
+            // ...
+            // reset to 0
+            System.out.println("============train==============");
+            dataCount = 0;
+        }
     }
 }
