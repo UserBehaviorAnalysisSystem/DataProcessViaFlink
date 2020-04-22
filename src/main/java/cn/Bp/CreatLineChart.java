@@ -228,9 +228,9 @@ public class CreatLineChart {
         String line = null;
         ArrayList<Double> predict = new ArrayList<>();
         ArrayList<Double> expect = new ArrayList<>();
-        int offset = 0, end = 1100;
+        int offset = 0, start = 100, end = 1100;
         while((line = bufferedReader.readLine()) != null && offset <= end){
-            if(offset > 100) {
+            if(offset > start) {
                 String[] items = line.split(",");
                 predict.add(Double.valueOf(items[0]));
                 expect.add(Double.valueOf(items[1]));
@@ -245,7 +245,7 @@ public class CreatLineChart {
 
         // generate xtitle
         List<String> categorie = new Vector<String>();
-        for(int i = 0; i < 1000; ++i){
+        for(int i = 0; i < end - start; ++i){
             categorie.add(String.valueOf(i));
         }
 
