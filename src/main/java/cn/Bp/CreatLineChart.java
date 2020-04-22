@@ -4,9 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -226,22 +224,28 @@ public class CreatLineChart {
     }
 
     public void draw() throws Exception{
-        // train and export data
-        //PredictAll driver = new PredictAll();
-        Predict driver = new Predict();
-        driver.init();
-        driver.train();
-        //driver.show();
-        ArrayList<ArrayList<Double>> pair = driver.export();
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(new File("src/main/resources/final/compare.csv")));
+        String line = null;
+        ArrayList<Double> predict = new ArrayList<>();
+        ArrayList<Double> expect = new ArrayList<>();
+        int offset = 0, end = 1100;
+        while((line = bufferedReader.readLine()) != null && offset <= end){
+            if(offset > 100) {
+                String[] items = line.split(",");
+                predict.add(Double.valueOf(items[0]));
+                expect.add(Double.valueOf(items[1]));
+            }
+            offset++;
+        }
 
         // generate ytitle
         List<Data> datas = new Vector<Data>();
-        datas.add(new Data("old", pair.get(1)));
-        datas.add(new Data("new", pair.get(0)));
+        datas.add(new Data("predict", predict));
+        datas.add(new Data("expect", expect));
 
         // generate xtitle
         List<String> categorie = new Vector<String>();
-        for(int i = 0; i < 30; ++i){
+        for(int i = 0; i < 1000; ++i){
             categorie.add(String.valueOf(i));
         }
 

@@ -112,6 +112,9 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         // show diff
         Double predictResult = bp.predict(data);
         System.out.println("predict:" + predictResult + ", expect:" + count / allUser);
+        StringBuilder compare = new StringBuilder();
+        compare.append(predictResult).append(",").append(count / allUser);
+        csvOp.appendWrite(compare.toString(), "src/main/resources/final/compare.csv");
 
         dataCount++;
         System.out.println("dataCount:" + dataCount);
