@@ -4,16 +4,28 @@ import java.util.ArrayList;
 
 public class Data {
     private static final long serialVersionUID = 1L;
-    private String name;// 名字
-    private ArrayList<Double> data;
-    public Data(String s, ArrayList<Double> d) throws Exception{
-        this.name = s;
-        this.data = d;
+    private Double predict;
+    private Double expect;
+
+    public Data(Double d1, Double d2) throws Exception{
+        this.predict = d1;
+        this.expect = d2;
     }
-    public String getName() throws Exception{
-        return name;
+
+    public Double getPredict() {
+        return predict;
     }
-    public ArrayList<Double> getData() throws Exception{
-        return data;
+
+    public void setPredict(Double predict) {
+        this.predict = predict;
     }
+
+    public Double getExpect() {
+        return expect;
+    }
+
+    public void setExpect(Double expect) {
+        this.expect = expect;
+    }
+
 }

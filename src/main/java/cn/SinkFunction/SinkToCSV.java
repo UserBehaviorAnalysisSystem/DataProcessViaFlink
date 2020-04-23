@@ -1,7 +1,9 @@
 package cn.SinkFunction;
 
 import cn.Bp.BP;
+import cn.Bp.Data;
 import cn.csv.CsvOp;
+import cn.zzt.Main;
 import cn.zzt.UserBehavior;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.joda.time.DateTime;
@@ -20,7 +22,6 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
     private ArrayList<Double> expects = new ArrayList<>();
     @Override
     public void invoke(HashSet<UserBehavior> set, Context context) throws Exception {
-
         //String windowStart = new DateTime(context.window().getStart(), DateTimeZone.forID("+08:00")).toString("yyyy-MM-dd HH:mm:ss");
         // userId - count
         HashMap<Long, Long> map = new HashMap<>();
@@ -127,5 +128,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
             datas.clear();
             expects.clear();
         }
+
+        Main.queue.put(new Data(predictResult, count / allUser));
     }
 }

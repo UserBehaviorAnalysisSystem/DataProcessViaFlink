@@ -1,5 +1,6 @@
 package cn.zzt;
-import cn.Bp.CreatLineChart;
+import cn.Bp.Data;
+import cn.Bp.MyFrame;
 import cn.SinkFunction.SinkToCSV;
 import cn.WindowFunction.ProcessCountUser;
 import cn.csv.CsvOp;
@@ -12,7 +13,15 @@ import cn.AggregateFunction.CountSpecificKey;
 import cn.WindowFunction.WindowResultFunction;
 import cn.KeyedProcessFunction.TopNHotItems;
 
+import javax.swing.*;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class Main {
+    public static SynchronousQueue<Data> queue = new SynchronousQueue<Data>();
+
     public void runDemo() throws Exception{
         // generate dataSet
         CsvOp c = new CsvOp();
@@ -30,8 +39,8 @@ public class Main {
                 .addSink(new SinkToCSV());
         m.env.execute("demo");
 
-        CreatLineChart creatLineChart = new CreatLineChart();
-        creatLineChart.draw();
+        //CreatLineChart creatLineChart = new CreatLineChart();
+        //creatLineChart.draw();
     }
 
     public void runMain() throws Exception{
@@ -61,16 +70,23 @@ public class Main {
         }).start();
 
         // show picture
-        /*new Thread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    new CreatLineChart().draw();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 创建图形
+                        try {
+                            MyFrame myFrame = new MyFrame();
+                            (new Thread(myFrame)).start();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
-        }).start();*/
+        }).start();
 
     }
     public static void main(String[] args) throws Exception{
