@@ -4,20 +4,28 @@ import cn.Bp.MyFrame;
 import cn.SinkFunction.SinkToCSV;
 import cn.WindowFunction.ProcessCountUser;
 import cn.csv.CsvOp;
-import cn.zzt.MyClass;
+import org.apache.flink.api.common.functions.AggregateFunction;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.api.common.state.ListState;
+import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.java.tuple.Tuple;
+import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import cn.AggregateFunction.CountSpecificKey;
-import cn.WindowFunction.WindowResultFunction;
-import cn.KeyedProcessFunction.TopNHotItems;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
+import org.apache.flink.util.Collector;
 
 import javax.swing.*;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
 
 public class Main {
     public static SynchronousQueue<Data> queue = new SynchronousQueue<Data>();
@@ -56,13 +64,132 @@ public class Main {
             public void run() {
                 try {
                     MyClass m = new MyClass();
-                    DataStreamSource<String> dataStreamSource = m.createKafkaDataSource();
+                    DataStreamSource<String> dataStreamSource = m.createKafkaDataSource("testForFlink10");
+                    DataStreamSource<String> dataStreamSource2 = m.createKafkaDataSource("topN");
                     dataStreamSource
                             .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                             .timeWindowAll(Time.minutes(30), Time.seconds(15))
                             .process(new ProcessCountUser())
                             .addSink(new SinkToCSV());
+
+                    dataStreamSource2
+                            .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            .filter(new FilterFunction<UserBehavior>() {
+                                @Override
+                                public boolean filter(UserBehavior userBehavior) throws Exception {
+                                    return userBehavior.getBehavior().equals("pv");
+                                }
+                            })
+                            .keyBy("itemId")
+                            .timeWindow(Time.minutes(30), Time.seconds(15))
+                            .aggregate(new AggregateFunction<UserBehavior, Long, Long>(){
+                                @Override
+                                public Long createAccumulator() {
+                                    return 0L;
+                                }
+
+                                @Override
+                                public Long add(UserBehavior userBehavior, Long acc) {
+                                    return acc + 1;
+                                }
+
+                                @Override
+                                public Long getResult(Long acc) {
+                                    return acc;
+                                }
+
+                                @Override
+                                public Long merge(Long acc1, Long acc2) {
+                                    return acc1 + acc2;
+                                }
+                            }, new WindowFunction<Long, ItemViewCount, Tuple, TimeWindow>(){
+                                @Override
+                                public void apply(
+                                        Tuple key,  // 窗口的主键，即 itemId
+                                        TimeWindow window,  // 窗口
+                                        Iterable<Long> aggregateResult, // 聚合函数的结果，即 count 值
+                                        Collector<ItemViewCount> collector  // 输出类型为 ItemViewCount
+                                ) throws Exception {
+                                    Long itemId = ((Tuple1<Long>) key).f0;
+                                    Long count = aggregateResult.iterator().next();
+                                    collector.collect(ItemViewCount.of(itemId, window.getEnd(), count));
+                                }
+                            })
+                            .keyBy("windowEnd")
+                            .process(new KeyedProcessFunction<Tuple, ItemViewCount, String>(){
+                                private final int topSize = 5;
+                                private ListState<ItemViewCount> itemState;
+                                @Override
+                                public void open(Configuration parameters) throws Exception {
+                                    super.open(parameters);
+                                    ListStateDescriptor<ItemViewCount> itemsStateDesc = new ListStateDescriptor<>(
+                                            "itemState-state",
+                                            ItemViewCount.class);
+                                    itemState = getRuntimeContext().getListState(itemsStateDesc);
+                                }
+                                @Override
+                                public void processElement(
+                                        ItemViewCount input,
+                                        Context context,
+                                        Collector<String> collector) throws Exception {
+
+                                    // 每条数据都保存到状态中
+                                    itemState.add(input);
+                                    // 注册 windowEnd+1 的 EventTime Timer, 当触发时，说明收齐了属于windowEnd窗口的所有商品数据
+                                    context.timerService().registerEventTimeTimer(input.windowEnd + 1);
+                                }
+                                @Override
+                                public void onTimer(
+                                        long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
+                                    // 获取收到的所有商品点击量
+                                    List<ItemViewCount> allItems = new ArrayList<>();
+                                    for (ItemViewCount item : itemState.get()) {
+                                        allItems.add(item);
+                                    }
+                                    // 提前清除状态中的数据，释放空间
+                                    itemState.clear();
+                                    // 按照点击量从大到小排序
+                                    allItems.sort(new Comparator<ItemViewCount>() {
+                                        @Override
+                                        public int compare(ItemViewCount o1, ItemViewCount o2) {
+                                            return (int) (o2.viewCount - o1.viewCount);
+                                        }
+                                    });
+                                    // 将排名信息格式化成 String, 便于打印
+                                    StringBuilder result = new StringBuilder();
+                                    result.append("====================================\n");
+                                    result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
+                                    for (int i=0; i<allItems.size() && i < topSize; i++) {
+                                        ItemViewCount currentItem = allItems.get(i);
+                                        // No1:  商品ID=12224  浏览量=2413
+                                        result.append("No").append(i).append(":")
+                                                .append("  商品ID=").append(currentItem.itemId)
+                                                .append("  浏览量=").append(currentItem.viewCount)
+                                                .append("\n");
+                                    }
+                                    result.append("====================================\n\n");
+
+                                    // 控制输出频率，模拟实时滚动结果
+                                    Thread.sleep(1000);
+
+                                    out.collect(result.toString());
+                                }
+                            })
+                            .print();
+
                     m.env.execute("flink kafka consumer");
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    //MyClass m = new MyClass();
+                    //DataStreamSource<String> dataStreamSource;
                 }catch (Exception e){
                     e.printStackTrace();
                 }

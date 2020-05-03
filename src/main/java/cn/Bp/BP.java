@@ -165,7 +165,7 @@ public class BP {
                     }
                 }};
                 Double loss = mseLoss(preds, expects);
-                System.out.printf("loss: %f\n", loss);
+                //System.out.printf("loss: %f\n", loss);
             }
         }
     }

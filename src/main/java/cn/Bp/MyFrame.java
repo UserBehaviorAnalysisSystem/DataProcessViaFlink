@@ -165,7 +165,7 @@ public class MyFrame extends JFrame implements Runnable{
                 predict.add(latestPredict);
                 expect.add(latestExpect);
                 categories.add(s);
-                System.out.println("predict:" + predict.get(dataCount - 1) + ",expect:" + expect.get(dataCount - 1) + ",categories:" + categories.get(dataCount - 1));
+                //System.out.println("predict:" + predict.get(dataCount - 1) + ",expect:" + expect.get(dataCount - 1) + ",categories:" + categories.get(dataCount - 1));
 
                 dataset.clear();
                 for(int i = 0; i < dataCount; ++i){

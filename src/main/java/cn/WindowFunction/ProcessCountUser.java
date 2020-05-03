@@ -16,7 +16,7 @@ public class ProcessCountUser extends ProcessAllWindowFunction<UserBehavior, Has
         //String windowStart=new DateTime(context.window().getStart(), DateTimeZone.forID("+08:00")).toString("yyyy-MM-dd HH:mm:ss");
         //String windowEnd=new DateTime(context.window().getEnd(), DateTimeZone.forID("+08:00")).toString("yyyy-MM-dd HH:mm:ss");
         String windowTime = context.window().toString();
-        System.out.println("===========" + windowTime + "================");
+        //System.out.println("===========" + windowTime + "================");
 
         HashSet<UserBehavior> ret = new HashSet<>();
         for(UserBehavior u: input){

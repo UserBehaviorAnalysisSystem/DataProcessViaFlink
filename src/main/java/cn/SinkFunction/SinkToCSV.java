@@ -63,7 +63,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         }
         // 1. PV/UV
         int allUser = map.size();
-        System.out.printf("PV/UV: %f\n", count / allUser);
+        //System.out.printf("PV/UV: %f\n", count / allUser);
 
         // 2. onlyPV/UV
         Double onlyPV = 0.0;
@@ -72,7 +72,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
                 onlyPV++;
             }
         }
-        System.out.printf("onlyPV/PV:%f\n", onlyPV / count);
+        //System.out.printf("onlyPV/PV:%f\n", onlyPV / count);
         // 3. each type / all percent
         HashMap<String, Double> percent = new HashMap<>();
         percent.put("pv", 0.0);
@@ -81,7 +81,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         percent.put("cart", 0.0);
         for(Map.Entry<String, Long> e: operatorMap.entrySet()){
             Long cur = e.getValue();
-            System.out.printf("%s/all: %d/%f = %f\n", e.getKey(), e.getValue(), count, e.getValue() / count);
+            //System.out.printf("%s/all: %d/%f = %f\n", e.getKey(), e.getValue(), count, e.getValue() / count);
             percent.put(e.getKey(), e.getValue() / count);
         }
 
@@ -112,18 +112,18 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         expects.add(count / allUser);
         // show diff
         Double predictResult = bp.predict(data);
-        System.out.println("predict:" + predictResult + ", expect:" + count / allUser);
+        //System.out.println("predict:" + predictResult + ", expect:" + count / allUser);
         StringBuilder compare = new StringBuilder();
         compare.append(predictResult).append(",").append(count / allUser);
         csvOp.appendWrite(compare.toString(), "src/main/resources/final/compare.csv");
 
         dataCount++;
-        System.out.println("dataCount:" + dataCount);
+        //System.out.println("dataCount:" + dataCount);
         if(dataCount == 30){
             // train
             bp.train(datas, expects);
             // reset to 0
-            System.out.println("============train==============");
+            //System.out.println("============train==============");
             dataCount = 0;
             datas.clear();
             expects.clear();
