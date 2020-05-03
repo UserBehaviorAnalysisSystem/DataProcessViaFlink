@@ -90,12 +90,12 @@ public class MyClass {
         return timedData;
     }
 
-    public DataStreamSource<String> createKafkaDataSource() throws Exception{
+    public DataStreamSource<String> createKafkaDataSource(String topic) throws Exception{
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", "localhost:9092");
         props.setProperty("group.id", "flink-group");
 
-        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>("testForFlink10", new SimpleStringSchema(), props);
+        FlinkKafkaConsumer<String> consumer = new FlinkKafkaConsumer<>(topic, new SimpleStringSchema(), props);
         consumer.setStartFromLatest();
         // add watermark
         //consumer.assignTimestampsAndWatermarks(new assignSingleMessageTimestampsAndWatermarks());

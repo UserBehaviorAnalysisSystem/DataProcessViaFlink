@@ -19,6 +19,6 @@ public class WindowResultFunction implements WindowFunction<Long, ItemViewCount,
     ) throws Exception {
         Long itemId = ((Tuple1<Long>) key).f0;
         Long count = aggregateResult.iterator().next();
-        collector.collect(ItemViewCount.ItemViewCount(itemId, window.getEnd(), count));
+        collector.collect(ItemViewCount.of(itemId, window.getEnd(), count));
     }
 }
