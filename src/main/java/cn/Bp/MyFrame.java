@@ -18,6 +18,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.ui.RectangleInsets;
 
 import javax.swing.*;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
@@ -85,7 +86,24 @@ public class MyFrame extends JFrame implements Runnable{
 
         // 4.generate ChartPanel
         ChartPanel chartPanel = new ChartPanel(chart);
-        this.getContentPane().add(chartPanel);
+        JPanel panel = new JPanel(new BorderLayout());
+        // itemId, numOfPv
+        Object[] columnNames = {"姓名", "语文", "数学", "英语", "总分"};
+        Object[][] rowData = {
+                {"张三", 80, 80, 80, 240},
+                {"John", 70, 80, 90, 240},
+                {"Sue", 70, 70, 70, 210},
+                {"Jane", 80, 70, 60, 210},
+                {"Joe", 80, 70, 60, 210}
+        };
+        JTable table = new JTable(rowData, columnNames);
+        panel.add(table.getTableHeader(), BorderLayout.NORTH);
+        panel.add(table, BorderLayout.CENTER);
+
+        // component 1
+        this.getContentPane().add(chartPanel, BorderLayout.WEST);
+        this.getContentPane().add(panel, BorderLayout.CENTER);
+
 
         // 5.show
         this.setVisible(true);
@@ -179,6 +197,11 @@ public class MyFrame extends JFrame implements Runnable{
                 JFreeChart jFreeChart = chartPanel.getChart();
                 jFreeChart.getCategoryPlot().setDataset(dataset);
                 jFreeChart.fireChartChanged();
+
+                JPanel jPanel = (JPanel)container.getComponent(1);
+                JTableHeader jTableHeader = (JTableHeader)jPanel.getComponent(0);
+                JTable jTable = (JTable)jPanel.getComponent(1);
+                jTable.print();
                 container.validate();
             }
         }catch (Exception e){
