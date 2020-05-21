@@ -117,7 +117,7 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         compare.append(predictResult).append(",").append(count / allUser);
         csvOp.appendWrite(compare.toString(), "src/main/resources/final/compare.csv");
 
-        dataCount++;
+        /*dataCount++;
         //System.out.println("dataCount:" + dataCount);
         if(dataCount == 30){
             // train
@@ -127,8 +127,12 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
             dataCount = 0;
             datas.clear();
             expects.clear();
-        }
+        }*/
+
+
 
         Main.queue.put(new Data(predictResult, count / allUser));
+        // update bp network
+        bp.trainOne(data, count / allUser);
     }
 }

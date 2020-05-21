@@ -103,6 +103,12 @@ public class BP {
             expects.set(i, (old - Min) / gap);
         }
     }
+    public Double NormalizeExpect(Double expect){
+        Double gap = Max - Min;
+        Double k = gap;
+        Double b = Min;
+        return (expect - Min) / gap;
+    }
 
     public void train(ArrayList<ArrayList<Double>> data, ArrayList<Double> expects){
         assert data.size() == expects.size();
@@ -170,6 +176,65 @@ public class BP {
         }
     }
 
+    public void trainOne(ArrayList<Double> data, Double e) throws Exception{
+        // normalized expects data
+        Double expect = NormalizeExpect(e);
+        // number of times to loop through the entire dataset
+        int epochs = 10000;
+        for(int i = 0; i < epochs; ++i){
+            ArrayList<Double> input = data;
+            ArrayList<Double> finalOut = feedForward(input);
+            ArrayList<Double> hiddenOut = feedForward("hidden", input);
+            Double pred = finalOut.get(0);
+            Double dL_dPred = -2.0 * (expect - pred);
+
+            // update output
+            ArrayList<Double> dPred_dHs = new ArrayList<>();
+            for(int k = 0; k < ONUM; ++k) {
+                Neuron cur = output.get(k);
+
+                Double sum = cur.calSum(hiddenOut);
+                Double dPred_dB = Neuron.derivSigmoid(sum);
+
+                //update output weight
+                for (int wIdx = 0; wIdx < HNUM; ++wIdx) {
+                    Double hout = hiddenOut.get(wIdx);
+                    Double dPred_dW = hout * Neuron.derivSigmoid(sum);
+                    Double oldW = cur.weight.get(wIdx);
+                    dPred_dHs.add(oldW * Neuron.derivSigmoid(sum));
+                    oldW -= learningRate * dL_dPred * dPred_dW;
+                    cur.weight.set(wIdx, oldW);
+                }
+                // update output bias
+                cur.bias -= learningRate * dL_dPred * dPred_dB;
+            }
+
+            // update hidden level
+            for(int k = 0; k < HNUM; ++k){
+                Neuron cur = hide.get(k);
+
+                Double sum = cur.calSum(input);
+                Double dH_dB = Neuron.derivSigmoid(sum);
+
+                Double dPred_dH = dPred_dHs.get(k);
+                // update hidden weight
+                for(int wIdx = 0; wIdx < INUM; ++wIdx){
+                    Double in = input.get(wIdx);
+                    Double dL_dW = in * Neuron.derivSigmoid(sum);
+                    Double oldW = cur.weight.get(wIdx);
+                    oldW -= learningRate * dL_dPred * dPred_dH * dL_dW;
+                    cur.weight.set(wIdx, oldW);
+                }
+                cur.bias -= learningRate * dL_dPred * dPred_dH * dH_dB;
+            }
+            if(i % 100 == 0){
+                Double predRes = feedForward(input).get(0);
+                Double loss = mseLoss(predRes, expect);
+                //System.out.printf("loss: %f\n", loss);
+            }
+        }
+    }
+
     public Double predict(ArrayList<Double> data) {
         ArrayList<Double> ret = bp.feedForward(data);
         return ret.get(0) * (Max - Min) + Min;
@@ -184,6 +249,10 @@ public class BP {
             ret += diff * diff;
         }
         return ret / len;
+    }
+
+    private static Double mseLoss(Double a, Double b){
+        return (b - a)*(b - a);
     }
 
     public static void main(String[] args) throws Exception {
