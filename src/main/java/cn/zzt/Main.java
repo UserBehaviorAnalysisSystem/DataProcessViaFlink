@@ -1,6 +1,7 @@
 package cn.zzt;
 import cn.Bp.Data;
 import cn.Bp.MyFrame;
+import cn.RFM.RFM;
 import cn.SinkFunction.SinkToCSV;
 import cn.WindowFunction.ProcessCountUser;
 import cn.csv.CsvOp;
@@ -20,15 +21,59 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
 import javax.swing.*;
+import java.awt.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Main {
+    public static Lock containerLock = new ReentrantLock();
     public static SynchronousQueue<Data> queue = new SynchronousQueue<Data>();
+
+    public static MyFrame myFrame = null;
+    public static RFM rfm = new RFM();
+
+    public static Object[] columnNames = {"TopN", "ItemId", "frequency"};
+    public static Object[] columnNames2 = {"TopN", "userId", "RFM"};
+    public static Object[][] rowData = {
+            {1, 0, 0},
+            {2, 0, 0},
+            {3, 0, 0},
+            {4, 0, 0},
+            {5, 0, 0},
+            {6, 0, 0},
+            {7, 0, 0},
+            {8, 0, 0},
+            {9, 0, 0},
+            {10, 0, 0},
+            {11, 0, 0},
+            {12, 0, 0},
+            {13, 0, 0},
+            {14, 0, 0},
+            {15, 0, 0}
+    };
+    public static Object[][] rowData2 = {
+            {1, 0, 0},
+            {2, 0, 0},
+            {3, 0, 0},
+            {4, 0, 0},
+            {5, 0, 0},
+            {6, 0, 0},
+            {7, 0, 0},
+            {8, 0, 0},
+            {9, 0, 0},
+            {10, 0, 0},
+            {11, 0, 0},
+            {12, 0, 0},
+            {13, 0, 0},
+            {14, 0, 0},
+            {15, 0, 0}
+    };
 
     public void runDemo() throws Exception{
         // generate dataSet
@@ -66,6 +111,7 @@ public class Main {
                     MyClass m = new MyClass();
                     DataStreamSource<String> dataStreamSource = m.createKafkaDataSource("testForFlink10");
                     DataStreamSource<String> dataStreamSource2 = m.createKafkaDataSource("topN");
+                    DataStreamSource<String> dataStreamSource3 = m.createKafkaDataSource("userTopN");
                     dataStreamSource
                             .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                             .timeWindowAll(Time.minutes(30), Time.seconds(15))
@@ -117,7 +163,7 @@ public class Main {
                             })
                             .keyBy("windowEnd")
                             .process(new KeyedProcessFunction<Tuple, ItemViewCount, String>(){
-                                private final int topSize = 5;
+                                private final int topSize = 15;
                                 private ListState<ItemViewCount> itemState;
                                 @Override
                                 public void open(Configuration parameters) throws Exception {
@@ -139,8 +185,7 @@ public class Main {
                                     context.timerService().registerEventTimeTimer(input.windowEnd + 1);
                                 }
                                 @Override
-                                public void onTimer(
-                                        long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
+                                public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
                                     // 获取收到的所有商品点击量
                                     List<ItemViewCount> allItems = new ArrayList<>();
                                     for (ItemViewCount item : itemState.get()) {
@@ -156,11 +201,18 @@ public class Main {
                                         }
                                     });
                                     // 将排名信息格式化成 String, 便于打印
+                                    // update swing form
                                     StringBuilder result = new StringBuilder();
                                     result.append("====================================\n");
                                     result.append("时间: ").append(new Timestamp(timestamp-1)).append("\n");
-                                    for (int i=0; i<allItems.size() && i < topSize; i++) {
+                                    containerLock.lock();
+                                    int len = allItems.size();
+                                    for (int i = 0; i < len && i < topSize; i++) {
                                         ItemViewCount currentItem = allItems.get(i);
+                                        Object[] curData = rowData[i];
+                                        rowData[i][0] = i + 1;
+                                        rowData[i][1] = currentItem.itemId;
+                                        rowData[i][2] = currentItem.viewCount;
                                         // No1:  商品ID=12224  浏览量=2413
                                         result.append("No").append(i).append(":")
                                                 .append("  商品ID=").append(currentItem.itemId)
@@ -169,13 +221,50 @@ public class Main {
                                     }
                                     result.append("====================================\n\n");
 
+                                    Container container = myFrame.getContentPane();
+                                    container.invalidate();
+                                    JPanel jPanel = (JPanel)container.getComponent(1);
+                                    jPanel.remove(1);
+                                    JTable jTable = new JTable(rowData, columnNames);
+                                    jPanel.add(jTable, 1);
+                                    container.validate();
+
+                                    containerLock.unlock();
+
                                     // 控制输出频率，模拟实时滚动结果
                                     Thread.sleep(1000);
 
-                                    out.collect(result.toString());
+                                    //out.collect(result.toString());
                                 }
                             })
                             .print();
+
+                    dataStreamSource3
+                            .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            .filter(new FilterFunction<UserBehavior>() {
+                                @Override
+                                public boolean filter(UserBehavior userBehavior) throws Exception {
+                                    return userBehavior.getBehavior().equals("buy");
+                                }
+                            }).map(new MapFunction<UserBehavior, Long>() {
+                                @Override
+                                public Long map(UserBehavior userBehavior) throws Exception{
+                                    long userId = userBehavior.getUserId();
+                                    long timestamp = userBehavior.getTimestamp();
+                                    rfm.connect();
+                                    rfm.update(userId, timestamp);
+                                    return userId;
+                                }
+                    }).print();
+                    /*dataStreamSource3
+                            .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            .filter(new FilterFunction<UserBehavior>() {
+                                @Override
+                                public boolean filter(UserBehavior userBehavior) throws Exception {
+                                    return userBehavior.getBehavior().equals("buy");
+                                }
+                            })
+                            .print();*/
 
                     m.env.execute("flink kafka consumer");
                 }catch (Exception e){
@@ -205,7 +294,7 @@ public class Main {
                     public void run() {
                         // 创建图形
                         try {
-                            MyFrame myFrame = new MyFrame();
+                            myFrame = new MyFrame();
                             (new Thread(myFrame)).start();
                         } catch (Exception e) {
                             e.printStackTrace();

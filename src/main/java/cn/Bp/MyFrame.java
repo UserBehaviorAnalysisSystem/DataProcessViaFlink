@@ -19,6 +19,7 @@ import org.jfree.ui.RectangleInsets;
 
 import javax.swing.*;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
@@ -60,7 +61,7 @@ public class MyFrame extends JFrame implements Runnable{
 
         // 3.configure line render
         CategoryPlot plot = chart.getCategoryPlot();
-        plot.setNoDataMessage("数据加载失败");
+        plot.setNoDataMessage("数据为空");
         plot.setInsets(new RectangleInsets(10, 10, 0, 10), false);
         LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
         renderer.setStroke(new BasicStroke(1.5F));
@@ -87,22 +88,27 @@ public class MyFrame extends JFrame implements Runnable{
         // 4.generate ChartPanel
         ChartPanel chartPanel = new ChartPanel(chart);
         JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel2 = new JPanel(new BorderLayout());
         // itemId, numOfPv
-        Object[] columnNames = {"姓名", "语文", "数学", "英语", "总分"};
+        /*Object[] columnNames = {"姓名", "语文", "数学", "英语", "总分"};
         Object[][] rowData = {
                 {"张三", 80, 80, 80, 240},
                 {"John", 70, 80, 90, 240},
                 {"Sue", 70, 70, 70, 210},
                 {"Jane", 80, 70, 60, 210},
                 {"Joe", 80, 70, 60, 210}
-        };
-        JTable table = new JTable(rowData, columnNames);
+        };*/
+        JTable table = new JTable(Main.rowData, Main.columnNames);
         panel.add(table.getTableHeader(), BorderLayout.NORTH);
         panel.add(table, BorderLayout.CENTER);
+        JTable table2 = new JTable(Main.rowData2, Main.columnNames2);
+        panel2.add(table2.getTableHeader(), BorderLayout.NORTH);
+        panel2.add(table2, BorderLayout.CENTER);
 
         // component 1
-        this.getContentPane().add(chartPanel, BorderLayout.WEST);
-        this.getContentPane().add(panel, BorderLayout.CENTER);
+        this.getContentPane().add(chartPanel, BorderLayout.CENTER);
+        this.getContentPane().add(panel, BorderLayout.WEST);
+        this.getContentPane().add(panel2, BorderLayout.EAST);
 
 
         // 5.show
@@ -191,6 +197,7 @@ public class MyFrame extends JFrame implements Runnable{
                     dataset.setValue(expect.get(i), "expect", categories.get(i));
                 }
 
+                Main.containerLock.lock();
                 Container container = this.getContentPane();
                 container.invalidate();
                 ChartPanel chartPanel = (ChartPanel)container.getComponent(0);
@@ -198,11 +205,25 @@ public class MyFrame extends JFrame implements Runnable{
                 jFreeChart.getCategoryPlot().setDataset(dataset);
                 jFreeChart.fireChartChanged();
 
-                JPanel jPanel = (JPanel)container.getComponent(1);
+                /*JPanel jPanel = (JPanel)container.getComponent(1);
                 JTableHeader jTableHeader = (JTableHeader)jPanel.getComponent(0);
                 JTable jTable = (JTable)jPanel.getComponent(1);
-                jTable.print();
+
+                int len = Main.rowData.length;
+                for(int i = 0; i < len; ++i){
+                    Object[] cur = Main.rowData[i];
+                    Main.rowData[i][0] = (int)cur[0] + 1;
+                    Main.rowData[i][1] = (int)cur[1] + 1;
+                    Main.rowData[i][2] = (int)cur[2] + 1;
+                }
+                JTable jTable1 = new JTable(Main.rowData, Main.columnNames);
+                jPanel.remove(1);
+                jPanel.add(jTable1, 1);*/
+
+                //jTable.addColumn(tableColumn);
+                //jTable.print();
                 container.validate();
+                Main.containerLock.unlock();
             }
         }catch (Exception e){
             e.printStackTrace();
