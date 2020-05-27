@@ -75,33 +75,12 @@ public class Main {
             {15, 0, 0}
     };
 
-    public void runDemo() throws Exception{
-        // generate dataSet
-        CsvOp c = new CsvOp();
-        //String src = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorSmall.csv";
-        //String dst = "D:\\学习\\毕设\\Project\\src\\main\\resources\\demo\\rawData.csv";
-        String src = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorSmall.csv";
-        String dst = "D:\\学习\\毕设\\Project\\src\\main\\resources\\demo\\rawData.csv";
-        c.generateDataset(src, dst, 400000);
-
-        // preprocess
-        MyClass m = new MyClass();
-        m.createCsvDataSource("demo/rawData.csv")
-                .timeWindowAll(Time.minutes(30), Time.minutes(15))
-                .process(new ProcessCountUser())
-                .addSink(new SinkToCSV());
-        m.env.execute("demo");
-
-        //CreatLineChart creatLineChart = new CreatLineChart();
-        //creatLineChart.draw();
-    }
-
     public void runMain() throws Exception{
         // generate dataSet
-        CsvOp c = new CsvOp();
+        /*CsvOp c = new CsvOp();
         String src = "D:\\学习\\毕设\\Project\\src\\main\\resources\\UserBehaviorLarge.csv";
-        String dst = "D:\\学习\\毕设\\Project\\src\\main\\resources\\final\\rawData.csv";
-        c.generateDataset(src, dst, 400000);
+        String dst = "D:\\学习\\毕设\\Project\\src\\main\\resources\\train\\rawData.csv";
+        c.generateDataset(src, dst, 1000000);*/
 
         // preprocess
         new Thread(new Runnable() {
@@ -109,9 +88,9 @@ public class Main {
             public void run() {
                 try {
                     MyClass m = new MyClass();
-                    DataStreamSource<String> dataStreamSource = m.createKafkaDataSource("testForFlink10");
+                    DataStreamSource<String> dataStreamSource = m.createKafkaDataSource("data");
                     DataStreamSource<String> dataStreamSource2 = m.createKafkaDataSource("topN");
-                    DataStreamSource<String> dataStreamSource3 = m.createKafkaDataSource("userTopN");
+                    //DataStreamSource<String> dataStreamSource3 = m.createKafkaDataSource("userTopN");
                     dataStreamSource
                             .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                             .timeWindowAll(Time.minutes(30), Time.seconds(15))
@@ -119,7 +98,20 @@ public class Main {
                             .addSink(new SinkToCSV());
 
                     dataStreamSource2
-                            .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            //.map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
+                            .map(new MapFunction<String, UserBehavior>() {
+                                @Override
+                                public UserBehavior map(String s) throws Exception {
+                                    UserBehavior userBehavior = UserBehavior.parse(s);
+                                    if(userBehavior.getBehavior().equals("buy")){
+                                        long userId = userBehavior.getUserId();
+                                        long timestamp = userBehavior.getTimestamp();
+                                        rfm.connect();
+                                        rfm.update(userId, timestamp);
+                                    }
+                                    return userBehavior;
+                                }
+                            })
                             .filter(new FilterFunction<UserBehavior>() {
                                 @Override
                                 public boolean filter(UserBehavior userBehavior) throws Exception {
@@ -231,15 +223,12 @@ public class Main {
 
                                     containerLock.unlock();
 
-                                    // 控制输出频率，模拟实时滚动结果
-                                    Thread.sleep(1000);
-
                                     //out.collect(result.toString());
                                 }
                             })
                             .print();
 
-                    dataStreamSource3
+                    /*dataStreamSource3
                             .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                             .filter(new FilterFunction<UserBehavior>() {
                                 @Override
@@ -255,7 +244,7 @@ public class Main {
                                     rfm.update(userId, timestamp);
                                     return userId;
                                 }
-                    }).print();
+                    }).print();*/
                     /*dataStreamSource3
                             .map((MapFunction<String, UserBehavior>) s -> UserBehavior.parse(s))
                             .filter(new FilterFunction<UserBehavior>() {

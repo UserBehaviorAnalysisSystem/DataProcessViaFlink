@@ -35,7 +35,11 @@ public class Neuron {
     }
 
     public static void main(String[] args) throws Exception{
-
+        double a = 3.394767684294361, b = 3.3188213800912223;
+        if(a > b)
+            System.out.println("yes");
+        else
+            System.out.println("no");
     }
 
     /*-------------------------------------------------------*/

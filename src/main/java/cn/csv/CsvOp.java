@@ -86,8 +86,9 @@ public class CsvOp {
             String[] data = line.split(",");
             UserBehavior userBehavior = new UserBehavior(Long.valueOf(data[0]), Long.valueOf(data[1]), Integer.valueOf(data[2]), data[3], Long.valueOf(data[4]));
             // start from 2017-11-26 09:00:00
-            if(userBehavior.getTimestamp() >= 1511658000)
+            if(userBehavior.getTimestamp() >= 1511657000 && userBehavior.getTimestamp() < 1511658000){
                 dataset.add(userBehavior);
+            }
             index++;
         }
         Collections.sort(dataset, new Comparator<UserBehavior>() {

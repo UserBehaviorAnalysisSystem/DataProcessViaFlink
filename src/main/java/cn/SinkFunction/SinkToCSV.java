@@ -20,6 +20,11 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
     private int dataCount = 0;
     private ArrayList<ArrayList<Double>> datas = new ArrayList<>();
     private ArrayList<Double> expects = new ArrayList<>();
+
+    private ArrayList<Double> lastData = null;
+    private Double lastRealExpect = 0.0;
+    private Double lastPredictExpect = 0.0;
+    private int truePos = 0, trueNeg = 0, falsePos = 0, falseNeg = 0;
     @Override
     public void invoke(HashSet<UserBehavior> set, Context context) throws Exception {
         //String windowStart = new DateTime(context.window().getStart(), DateTimeZone.forID("+08:00")).toString("yyyy-MM-dd HH:mm:ss");
@@ -98,6 +103,12 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         CsvOp csvOp = new CsvOp();
         csvOp.appendWrite(record, "src/main/resources/final/data.csv");
         csvOp.appendWrite(pvuv, "src/main/resources/final/expect.csv");
+        /*if(lastExpect == 0.0){
+            lastExpect = count / allUser;
+        }else{
+
+        }*/
+
 
         // predict
         BP bp = bp = BP.getInstance(5, 4, 1);
@@ -117,22 +128,55 @@ public class SinkToCSV extends RichSinkFunction<HashSet<UserBehavior>> {
         compare.append(predictResult).append(",").append(count / allUser);
         csvOp.appendWrite(compare.toString(), "src/main/resources/final/compare.csv");
 
-        /*dataCount++;
-        //System.out.println("dataCount:" + dataCount);
-        if(dataCount == 30){
-            // train
-            bp.train(datas, expects);
-            // reset to 0
-            //System.out.println("============train==============");
-            dataCount = 0;
-            datas.clear();
-            expects.clear();
-        }*/
-
-
+        // analysis result
+        Double curRealExpect = count / allUser;
+        //System.out.println("curReal:" + curRealExpect + ", lastReal:" + lastRealExpect + ", curPred:" + predictResult + ", lastPred:" + lastPredictExpect);
+        if(lastRealExpect != 0.0 && lastPredictExpect != 0.0){
+            if(curRealExpect > lastRealExpect){
+                // actually increase: positive
+                //csvOp.appendWrite("up", "src/main/resources/final/F1result.csv");
+                if(predictResult > lastRealExpect){
+                    // true positive
+                    //System.out.println("curPred:" + predictResult + ", lastPred:" + lastPredictExpect);
+                    truePos++;
+                }else{
+                    // false negative
+                    //System.out.println("curPred:" + predictResult + ", lastPred:" + lastPredictExpect);
+                    falseNeg++;
+                }
+            }else{
+                // actually decrease: negative
+                //csvOp.appendWrite("down", "src/main/resources/final/F1result.csv");
+                if(predictResult > lastRealExpect){
+                    // false positive
+                    falsePos++;
+                }else{
+                    // true negative
+                    trueNeg++;
+                }
+            }
+        }
+        lastRealExpect = count / allUser;
+        lastPredictExpect = predictResult;
+        System.out.println("truePos:" + truePos + ", trueNeg:" + trueNeg + ", " + "falsePos:" + falsePos + ",falseNeg:" + falseNeg);
+        float recall = (float)(truePos)/((float)(truePos + falseNeg)), precision = (float)truePos/((float)(truePos + falsePos));
+        float f1 = 2 * (recall * precision)/(recall + precision);
+        System.out.println("f1:" + f1);
 
         Main.queue.put(new Data(predictResult, count / allUser));
         // update bp network
-        bp.trainOne(data, count / allUser);
+        //bp.trainOne(data, curRealExpect);
+        if(lastData != null){
+            //System.out.println("train");
+            //bp.trainOne(lastData, count / allUser);
+        }
+
+        if(lastData != null){
+            // first data
+            // do nothing
+        }else{
+            lastData = data;
+            //System.out.println("not null");
+        }
     }
 }

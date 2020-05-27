@@ -53,7 +53,7 @@ public class MyFrame extends JFrame implements Runnable{
 
 
         // 1.generate chart
-        JFreeChart chart = ChartFactory.createLineChart("predict.png", "xtitle", "ytitle", dataset, PlotOrientation.VERTICAL, true, true, true);
+        JFreeChart chart = ChartFactory.createLineChart("Result", "number", "pv/uv", dataset, PlotOrientation.VERTICAL, true, true, true);
         //chart.fireChartChanged();
 
         // 2.configure antiAlias

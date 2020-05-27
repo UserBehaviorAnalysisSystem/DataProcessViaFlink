@@ -1,5 +1,10 @@
 package cn.Bp;
 
+import cn.csv.CsvOp;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 /*
@@ -25,7 +30,7 @@ public class BP {
 
     public static BP bp = null;
 
-    private BP(int i, int h, int o){
+    private BP(int i, int h, int o) throws Exception{
         INUM = i; HNUM = h; ONUM = o;
         learningRate = 0.1;
 
@@ -59,9 +64,29 @@ public class BP {
         return bp;
     }
 
-    public static synchronized BP getInstance(int i, int h, int o){
+    public static synchronized BP getInstance(int i, int h, int o) throws Exception{
         if(bp == null){
             bp = new BP(i, h, o);
+            // pre train
+            ArrayList<ArrayList<Double>> datas = new ArrayList<>();
+            ArrayList<Double> expects = new ArrayList<>();
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(new File("D:\\学习\\毕设\\Project\\src\\main\\resources\\train\\data.csv")));
+            String line = null;
+            while((line = bufferedReader.readLine())!= null){
+                ArrayList<Double> cur = new ArrayList<>();
+                String[] v = line.split(",");
+                int len = v.length;
+                for(int k = 1; k < len; ++k){
+                    cur.add(Double.valueOf(v[k]));
+                }
+                datas.add(cur);
+            }
+            bufferedReader.close();
+            bufferedReader = new BufferedReader(new FileReader(new File("D:\\学习\\毕设\\Project\\src\\main\\resources\\train\\expect.csv")));
+            while ((line = bufferedReader.readLine()) != null) {
+                expects.add(Double.valueOf(line));
+            }
+            bp.train(datas, expects);
         }
         return bp;
     }

@@ -113,7 +113,7 @@ public class RFM {
             while(!cache.isEmpty()){
                 UserInfo u = cache.poll();
                 tmp.add(u);
-                System.out.println("val: " + u.getVal());
+                //System.out.println("val: " + u.getVal());
                 Main.rowData2[index][1] = u.userId;
                 Main.rowData2[index][2] = u.val;
                 index--;
